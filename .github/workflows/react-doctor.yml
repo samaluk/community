@@ -67,7 +67,7 @@ jobs:
 
       # Immutable SHA pin to the current v2 release (millionco/react-doctor v2.2.8);
       # Renovate keeps the digest current via helpers:pinGitHubActionDigests.
-      - uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2 # v2.2.8
+      - uses: millionco/react-doctor@013f7373f91a3b9e68bd1dc7d4d354f4b041b117 # v2.2.9
         with:
           # Scan only the React/Next.js app — isolates this gate from the rest
           # of the monorepo and avoids workspace-boundary confusion.
