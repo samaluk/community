@@ -1,78 +1,76 @@
-# instant-nav rig: Community web
+# Instant navigation test workflow
 
-- BUILD: seed fixtures before building any cached public lists, then run
-  `EXPOSE_TESTING_API=1 pnpm build:next` (`apps/web`), served by `pnpm start`.
-  CI runs `pnpm migrate && pnpm exec tsx scripts/seed-e2e-fixtures.ts` before
-  the build; local databases already have the schema and should run the seed
-  script before each measured build. Both use `POSTGRES_URL` from `.env.local`
-  (local) or CI env.
-- EXPOSE: `process.env.EXPOSE_TESTING_API === '1'` — set explicitly for every
-  measured build (local and CI e2e), never set in real production. The
-  Playwright webServer command sets it in CI so `pnpm start` runs an
-  API-exposed build; locally build AND start must both be run with it.
-- SEED: the Playwright `globalSetup` seeds fixture content only when
-  `E2E_SEED_FIXTURES=1` (CI sets it). This keeps the upsert from running as a
-  side effect of every local test run: it writes to `POSTGRES_URL` (the dev
-  DB locally), and a slug collision would republish/overwrite content there.
-  Local runs set the flag or seed explicitly with
-  `pnpm exec tsx scripts/seed-e2e-fixtures.ts` (idempotent).
-- RUN: `pnpm test:e2e` (`playwright test --config=playwright.config.ts`) with
-  `BASE_URL=http://localhost:3000` (webServer: `pnpm dev` locally, `pnpm start`
-  in CI). Playwright `globalSetup` seeds fixture content (see SEED above).
-- TEST USER: anonymous public visitor — the frontend routes under test are
-  public. Data is fixture-seeded by `tests/e2e/global-setup.ts`
-  (`scripts/seed-e2e-fixtures.ts`) into `POSTGRES_URL` before tests: 2 places,
-  2 articles, 2 products, all `_status: 'published'`, fixed slugs
-  (`place-fixture-1`, `articulo-fixture-1`, `producto-fixture-1`, ...).
-- DRIFT:
-  - Empty vs seeded DB: CI and fresh local DBs have NO content; the seed script
-    is the only source of content, so content-dependent flows are deterministic.
-  - Draft mode: fixtures are published only; draft-mode reads must not change
-    what the test user sees.
-  - Locale: fixtures are seeded in `es` (the site's only locale).
-  - Geo cookie: places list reads a user-geo cookie; seeded places have no
-    region, so geo must not filter them out.
-- LOOP: local seed → `EXPOSE_TESTING_API=1 pnpm build:next` → `pnpm start`
-  (port 3000) → `E2E_SEED_FIXTURES=1 pnpm test:e2e`; fully agent-drivable on
-  this machine. CI: push → migrate/seed → API-exposed build →
-  `pnpm test:e2e` (sets `E2E_SEED_FIXTURES=1`); the same suite runs in the
-  `build-and-integration` job. No deploy approvals or secrets needed.
-- VERIFICATION: acceptance criteria map as follows.
-  - AC 1-4 (instant UI on places / articles / products / home CTAs): the
-    self-validating `@next/playwright` `instant()` locks in
-    `tests/e2e/instant-nav.e2e.spec.ts`. Each locks dynamic data while
-    navigating and asserts the static shell commits under the lock, then
-    asserts deferred content releases — so a vacuous pass is impossible on a
-    build lacking the testing API.
-  - AC 5 (Instant Insights reports no slow navigations): the `instant()`
-    locks are the programmatic equivalent — they fail when a navigation
-    exceeds the locked budget, which is the same signal Instant Insights
-    surfaces in the Next DevTools extension. The extension is a manual
-    spot-check; the locks are the CI-enforced check. (Differential evidence:
-    reverting only the three detail-page Suspense hoists fails exactly the
-    three detail guards, and the two Home CTA guards still pass.)
-- SCOPE DECISIONS (issue #191 asks only for Suspense/`'use cache'` shells; the
-  following are deliberate, documented additions):
-  - Fixture seeding (`scripts/seed-e2e-fixtures.ts`, Playwright `globalSetup`,
-    CI seed step, `EXPOSE_TESTING_API=1`): the `instant()` guards need
-    deterministic published content, which the repository does not otherwise
-    provide. Opt-in via `E2E_SEED_FIXTURES=1` so local runs never silently
-    republish content in the dev DB.
-  - `publicContentPublishing.ts` revalidation catch: Payload scripts (the
-    fixture seed) run outside Next's runtime, where `next/cache` does not
-    resolve; revalidation is best-effort there. Inside Next, the failure is
-    rethrown, so production revalidation failures stay visible.
-  - `fallow-baselines/dupes.json`: the new clone group (the three detail-page
-    static shells) is whitelisted in the same commits — this duplication IS
-    the PR's mechanism (three near-identical shell components), so it is a
-    conscious accept.
-- LIVENESS: n/a for the local `build && start` rig (artifact is freshly
-  built). Stop any previous `next start` before starting; fail the loop on
-  `EADDRINUSE`.
-- WALLS:
-  - Local build requires `.env.local` (present) and a reachable Postgres at
-    `POSTGRES_URL` (docker compose postgres on 5433). Build runs migrations on
-    an empty DB automatically (`pnpm build` = `migrate && build:next`).
-  - Build masks `.env.production.local` to keep prod vars out of local builds.
-  - Seeding uses the Payload local API; it must run after migrations exist and
-    before `next start` serves traffic.
+The navigation, ISR, and offline tests run against a production build. Development
+prefetch behavior does not establish that a production navigation is instant.
+
+## Local run
+
+Use a disposable local database. The fixture seed creates or overwrites published
+content at fixed slugs, and the CMS tests create and remove their own records.
+`POSTGRES_URL` must point to that database, and `TEST_POSTGRES_URL` must point to a
+separate database for the integration suite. Never use production database URLs.
+
+From `apps/web`, after configuring `.env.local` or exporting the test variables:
+
+```sh
+# On a fresh database only, apply the schema before seeding.
+pnpm migrate
+pnpm exec tsx scripts/seed-e2e-fixtures.ts
+# Build and run the normal production E2Es without Next's testing API. This
+# keeps ISR and ordinary prefetch behavior representative of production.
+pnpm build:next
+pnpm test:e2e
+# Rebuild for the isolated instant-navigation project. The testing API changes
+# Next's background ISR path, so it must not share the normal build.
+EXPOSE_TESTING_API=1 pnpm build:next
+EXPOSE_TESTING_API=1 pnpm test:e2e:instant
+```
+
+Playwright starts `pnpm start` locally and in CI. It uses
+`NEXT_PUBLIC_SERVER_URL`, defaulting to `http://localhost:3000`. For a different
+port, set both `PORT` and `NEXT_PUBLIC_SERVER_URL` for the server and tests. Local
+runs can reuse an already running production server at that URL. CI starts its
+own server and refuses to reuse one.
+
+`EXPOSE_TESTING_API=1` enables the Next.js testing API in the isolated instant
+navigation build. Keep it set for the test command so the server starts with the
+same configuration. Never enable it for a deployment serving real users. Seed
+before each build only when the database is fresh; the normal and instant builds
+reuse the same already-seeded database. Leave `E2E_SEED_FIXTURES` unset when
+running tests after the build. That flag remains available as an explicit opt-in
+to the standalone Playwright fixture setup.
+
+A successful build includes the two fixture slugs for each of `places`,
+`articles`, and `products`. The suite visits them anonymously. Draft preview and
+publishing tests use separate temporary staff users and documents.
+
+## What the checks prove
+
+- `instant-nav.e2e.spec.ts` uses `@next/playwright`'s `instant()` helper for each
+  collection's list-to-detail link, the home CTAs, and desktop/mobile navigation.
+  The destination shell must be visible while the lock is held. Prerendered or
+  cached content may appear immediately too; requiring it to remain hidden would
+  reject successful prerendering.
+- `offline.e2e.spec.ts` disconnects the browser after a link's prefetch. It checks
+  the shell while the browser cannot reach the server, then reconnects and checks
+  the content. A separate journey checks that a pending location Server Action
+  saves after reconnection and survives a reload.
+- `cms-isr.e2e.spec.ts` checks publishing and draft isolation for existing and
+  newly published slugs against the running Next.js server.
+- `error-boundary.e2e.spec.ts` checks recovery through the public content retry
+  boundary and preserves the missing-document behavior.
+
+The DevTools workflow in [README.md](README.md#check-instant-navigations-locally)
+checks the visual quality of the loading UI. Automated assertions do not replace
+that manual inspection.
+
+## CI
+
+The `build-and-integration` job migrates an empty database and seeds the
+fixtures. It builds and tests the normal production target first (`pnpm build:next`
+then `pnpm test:e2e`), then rebuilds and runs `pnpm test:e2e:instant` with
+`EXPOSE_TESTING_API=1`. The two builds use the same seeded database and do not
+reseed between tests. Integration tests use `TEST_POSTGRES_URL`.
+
+Local build scripts mask production env files before running Next.js. They do
+not change the target of an explicitly supplied `POSTGRES_URL`.

@@ -19,6 +19,40 @@ pnpm dev
 
 The app runs at `http://localhost:3000`. Payload admin runs at `/admin`.
 
+## Check instant navigations locally
+
+Run `pnpm dev` from the repository root, then open the app in a browser with the
+Next.js DevTools available. The project enables Cache Components, so the DevTools
+can show the shell that a visitor sees before request-time CMS data arrives.
+
+Open the development app at `http://localhost:3000` so the DevTools connection
+uses the same hostname as the server. Watch the Next.js development overlay for
+**Instant Insights** while clicking
+through the routes below. Each insight names the route or link that prevents an
+instant navigation. Follow the linked fix guidance, then repeat the navigation
+after the change.
+
+- `/places` → `/places/<slug>`
+- `/articles` → `/articles/<slug>`
+- `/products` → `/products/<slug>`
+- `/` → `/places` and `/verify`
+
+To inspect the actual loading shell, open **Navigation Inspector**, turn on
+**Pause on navigations**, and refresh a route or click one of its links. The
+inspector freezes the page at the initial shell. A page refresh is shown as
+**Page load**; a link click is shown as **Client nav**, with the source and target
+URLs. Check that the shell contains the page structure and useful labels while
+CMS data is pending, then click **Resume**. Turn **Pause on navigations** off when
+finished, since every later navigation will otherwise pause.
+
+Use the existing [`instant-nav.rig.md`](instant-nav.rig.md) for the seeded local
+build and Playwright workflow. The `instant()` checks in that rig provide the
+repeatable CI guard; the DevTools workflow is the manual check for the visual
+quality of each shell.
+
+The [Next.js 16.3 migration notes](../../docs/next-16.3-migration.md) link the
+follow-up issues and record caching, recovery, and deployment decisions.
+
 ## Environment
 
 [Vercel](https://vercel.com) is the source of truth for all environment variables. The canonical list and validation rules live in [`src/env.ts`](src/env.ts) (`@t3-oss/env-nextjs` + Zod). Local files are only a cache from `vercel env pull`:
@@ -127,10 +161,9 @@ pnpm build:production
 pnpm migrate:production
 ```
 
-The Next build runs its compile and generate phases separately, bypassing Next.js's
-TypeScript setup because TypeScript 7 is not compatible with the programmatic API used
-by this Next.js release. Run `pnpm typecheck` separately; a successful build alone does
-not prove type safety.
+Next.js runs TypeScript 7 through the project-local compiler CLI, enabled by
+`experimental.useTypeScriptCli`. The production build checks types, and
+`pnpm typecheck` runs the same compiler independently.
 
 ### Squashed baseline
 
