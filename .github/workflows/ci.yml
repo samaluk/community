@@ -102,14 +102,11 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Build (local/CI target)
+      - name: Build normal production target
         working-directory: apps/web
         run: pnpm build:next
         env:
           NODE_ENV: production
-          # Instant-navigation e2e verdicts need the testing API in the
-          # production build. Never set in real production (see apps/web/instant-nav.rig.md).
-          EXPOSE_TESTING_API: 1
 
       - name: Integration tests
         run: pnpm test:int
@@ -121,8 +118,18 @@ jobs:
       - name: E2E tests
         working-directory: apps/web
         run: pnpm test:e2e
+
+      - name: Build instant-navigation test target
+        working-directory: apps/web
+        run: pnpm build:next
         env:
-          # Opt-in fixture seeding (see apps/web/instant-nav.rig.md): the
-          # global setup only seeds when this is set, keeping the seed from
-          # running as a side effect of every local test run.
-          E2E_SEED_FIXTURES: 1
+          NODE_ENV: production
+          # The instant project needs Next's testing API. Never enable this
+          # flag in a deployment serving real users.
+          EXPOSE_TESTING_API: 1
+
+      - name: Instant-navigation E2E tests
+        working-directory: apps/web
+        run: pnpm test:e2e:instant
+        env:
+          EXPOSE_TESTING_API: 1

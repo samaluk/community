@@ -7,9 +7,14 @@ import type {
 import { publishedOrStaff } from '@/access/publishedOrStaff'
 import { isEditorOrAdmin } from '@/access/roles'
 import { env } from '@/env'
+import {
+  getPublicContentCollectionCacheTag,
+  getPublicContentDocCacheTag,
+  type PublicContentCollection,
+} from '@/lib/publicContentCache'
 import { buildPreviewUrl, draftVersions } from '@/lib/preview'
 
-export type PublicContentCollection = 'places' | 'articles' | 'products'
+export type { PublicContentCollection } from '@/lib/publicContentCache'
 
 type PublicContentPublishingTarget = {
   collection: PublicContentCollection
@@ -26,6 +31,7 @@ export type MaybePublicDoc = SlugData & {
 }
 
 export type RevalidatePath = (path: string) => void
+export type RevalidateTag = (tag: string, profile: { expire: number }) => void
 
 const publicContentTargets = {
   articles: {
@@ -131,20 +137,25 @@ export async function revalidatePublicContentDoc(args: {
   doc?: MaybePublicDoc | null
   previousDoc?: MaybePublicDoc | null
   revalidate?: RevalidatePath
+  revalidateTag?: RevalidateTag
 }) {
   if (!shouldRevalidatePublicContent(args.doc, args.previousDoc)) return
 
   await revalidatePublicPaths(getPublicContentRevalidationPaths(args), args.revalidate)
+  await revalidatePublicContentTags(
+    args.collection,
+    [getSlug(args.doc), getSlug(args.previousDoc)],
+    args.revalidateTag,
+  )
 }
 
 export async function revalidateDeletedPublicContentDoc(args: {
   collection: PublicContentCollection
   doc?: MaybePublicDoc | null
   revalidate?: RevalidatePath
+  revalidateTag?: RevalidateTag
 }) {
-  if (!isPublished(args.doc)) return
-
-  await revalidatePublicPaths(getPublicContentRevalidationPaths(args), args.revalidate)
+  await revalidatePublicContentDoc(args)
 }
 
 function revalidatePublicContentChange(
@@ -200,7 +211,45 @@ async function revalidatePublicPaths(paths: string[], revalidate?: RevalidatePat
     try {
       revalidatePath(path)
     } catch (error) {
+      if (env.NEXT_RUNTIME) throw error
       console.error(`Failed to revalidate public path "${path}"`, error)
+    }
+  }
+}
+
+async function revalidatePublicContentTags(
+  collection: PublicContentCollection,
+  slugs: Array<string | undefined>,
+  revalidate?: RevalidateTag,
+) {
+  const tags = Array.from(
+    new Set([
+      getPublicContentCollectionCacheTag(collection),
+      ...slugs
+        .filter((slug): slug is string => Boolean(slug))
+        .map((slug) => getPublicContentDocCacheTag(collection, slug)),
+    ]),
+  )
+  const revalidateTag =
+    revalidate ??
+    (await import('next/cache')
+      .then(({ revalidateTag: nextRevalidateTag }) => nextRevalidateTag)
+      .catch((error) => {
+        // Standalone Payload scripts do not have Next's cache runtime. Hooks
+        // remain best-effort there, while real Next requests surface failures.
+        if (env.NEXT_RUNTIME) throw error
+        console.error(`Failed to load next/cache outside Next runtime`, error)
+        return null
+      }))
+
+  if (!revalidateTag) return
+
+  for (const tag of tags) {
+    try {
+      revalidateTag(tag, { expire: 0 })
+    } catch (error) {
+      if (env.NEXT_RUNTIME) throw error
+      console.error(`Failed to revalidate public cache tag "${tag}"`, error)
     }
   }
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { emptyPublicContentSlug, getPublicContentStaticParams } from '@/lib/publicContentCache'
 import {
   getPublicContentPreviewUrl,
   getPublicContentPublishing,
@@ -9,6 +10,11 @@ import {
 } from '@/lib/publicContentPublishing'
 
 describe('Public Content Publishing', () => {
+  it('keeps empty public collections valid for Cache Components builds', () => {
+    expect(getPublicContentStaticParams(['popular-place'])).toEqual([{ slug: 'popular-place' }])
+    expect(getPublicContentStaticParams([])).toEqual([{ slug: emptyPublicContentSlug }])
+  })
+
   it('builds collection preview URLs from the shared route facts', () => {
     const placesPreview = parsePreviewUrl(
       getPublicContentPreviewUrl({
@@ -85,7 +91,10 @@ describe('Public Content Publishing', () => {
 
   it('revalidates public collection routes for published changes', async () => {
     const revalidatedPaths: string[] = []
+    const revalidatedTags: Array<{ expire: number; tag: string }> = []
     const revalidate = (path: string) => revalidatedPaths.push(path)
+    const revalidateTag = (tag: string, profile: { expire: number }) =>
+      revalidatedTags.push({ expire: profile.expire, tag })
 
     await revalidatePublicContentDoc({
       collection: 'places',
@@ -98,6 +107,7 @@ describe('Public Content Publishing', () => {
         slug: 'slug-viejo',
       },
       revalidate,
+      revalidateTag,
     })
 
     await revalidateDeletedPublicContentDoc({
@@ -107,6 +117,7 @@ describe('Public Content Publishing', () => {
         slug: 'nuevo-slug',
       },
       revalidate,
+      revalidateTag,
     })
 
     expect(revalidatedPaths).toEqual([
@@ -115,6 +126,13 @@ describe('Public Content Publishing', () => {
       '/places/slug-viejo',
       '/places',
       '/places/nuevo-slug',
+    ])
+    expect(revalidatedTags).toEqual([
+      { expire: 0, tag: 'public-content:places' },
+      { expire: 0, tag: 'public-content:places:nuevo-slug' },
+      { expire: 0, tag: 'public-content:places:slug-viejo' },
+      { expire: 0, tag: 'public-content:places' },
+      { expire: 0, tag: 'public-content:places:nuevo-slug' },
     ])
   })
 

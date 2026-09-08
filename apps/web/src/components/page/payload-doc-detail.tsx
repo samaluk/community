@@ -9,6 +9,7 @@ import type { Config } from '@/payload-types'
 import { PageDetail } from './page-shell'
 import { PageKicker } from './page-kicker'
 import { PageTitle } from './page-title'
+import { PublicContentErrorBoundary } from './public-content-error-boundary'
 
 /** Params contract of every Next.js detail route (`[slug]/page.tsx`). */
 export type SlugPageProps = {
@@ -63,9 +64,11 @@ export function PayloadDocDetail<TSlug extends TitledCollectionSlug>({
       </Link>
       <PageKicker>{kicker}</PageKicker>
       <Suspense fallback={null}>
-        <DocDetailContent collection={collection} params={params} titleTestId={titleTestId}>
-          {children}
-        </DocDetailContent>
+        <PublicContentErrorBoundary>
+          <DocDetailContent collection={collection} params={params} titleTestId={titleTestId}>
+            {children}
+          </DocDetailContent>
+        </PublicContentErrorBoundary>
       </Suspense>
     </PageDetail>
   )

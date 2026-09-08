@@ -4,6 +4,7 @@ import React from 'react'
 
 import { RefreshRouteOnSave } from '@/components/cms/RefreshRouteOnSave'
 import { MobileNav } from '@/components/layout/MobileNav'
+import { OfflineBanner } from '@/components/layout/OfflineBanner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { getSiteSettings } from '@/lib/siteSettings'
@@ -93,6 +94,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider>
           <RefreshRouteOnSave />
           <SiteHeader brandName={siteSettings.brandName} />
+          <OfflineBanner />
           <main>{children}</main>
           <SiteFooter siteSettings={siteSettings} />
           <Toaster />
