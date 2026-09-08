@@ -10,6 +10,8 @@ const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // Share each route's shell across header, mobile, and content links.
+  partialPrefetching: true,
   cacheLife: {
     publicContent: {
       expire: 86_400,
@@ -19,6 +21,7 @@ const nextConfig: NextConfig = {
   },
   reactCompiler: true,
   experimental: {
+    useOffline: true,
     // TypeScript 7 has no JS compiler API; use the project-local tsc CLI.
     // https://nextjs.org/docs/app/api-reference/config/typescript#using-typescript-7
     useTypeScriptCli: true,
