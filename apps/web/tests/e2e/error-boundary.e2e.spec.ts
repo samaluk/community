@@ -50,6 +50,8 @@ test('public detail content recovers from a server render error with retry', asy
   try {
     const token = await loginPublicContentTestAdmin(request, admin)
     authHeaders = { Authorization: `JWT ${token}` }
+    // Omit the optional summary to exercise the migrated schema, not only
+    // development databases whose constraints Payload synchronizes automatically.
     const createResponse = await request.post('/api/places?locale=es&draft=false', {
       data: {
         _status: 'published',
