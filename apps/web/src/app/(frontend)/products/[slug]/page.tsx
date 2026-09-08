@@ -1,10 +1,11 @@
 import Image from 'next/image'
 
 import { MetaPills, PayloadDocDetail, RichContent, type SlugPageProps } from '@/components/page'
-import { payloadDocMetadata } from '@/lib/payloadBySlug'
+import { payloadDocRoute } from '@/lib/payloadBySlug'
 import type { Product } from '@/payload-types'
 
-export const generateMetadata = payloadDocMetadata('products', 'Products')
+const { generateMetadata, generateStaticParams } = payloadDocRoute('products', 'Products')
+export { generateMetadata, generateStaticParams }
 
 export default function ProductDetailPage({ params }: SlugPageProps) {
   return (

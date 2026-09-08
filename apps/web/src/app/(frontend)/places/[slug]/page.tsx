@@ -6,10 +6,11 @@ import {
   type SlugPageProps,
 } from '@/components/page'
 import { getGoogleMapsUrl, placeAccessLabels, type PlaceMapItem } from '@/lib/places'
-import { payloadDocMetadata } from '@/lib/payloadBySlug'
+import { payloadDocRoute } from '@/lib/payloadBySlug'
 import type { Place } from '@/payload-types'
 
-export const generateMetadata = payloadDocMetadata('places', 'Places')
+const { generateMetadata, generateStaticParams } = payloadDocRoute('places', 'Places')
+export { generateMetadata, generateStaticParams }
 
 export default function PlaceDetailPage({ params }: SlugPageProps) {
   return (

@@ -1,8 +1,9 @@
 import { MetaPills, PayloadDocDetail, RichContent, type SlugPageProps } from '@/components/page'
 import { formatDifficulty } from '@/lib/articles'
-import { payloadDocMetadata } from '@/lib/payloadBySlug'
+import { payloadDocRoute } from '@/lib/payloadBySlug'
 
-export const generateMetadata = payloadDocMetadata('articles', 'Articles')
+const { generateMetadata, generateStaticParams } = payloadDocRoute('articles', 'Articles')
+export { generateMetadata, generateStaticParams }
 
 export default function ArticleDetailPage({ params }: SlugPageProps) {
   return (
