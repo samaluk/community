@@ -4,7 +4,7 @@ import { FormEvent, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
@@ -70,7 +70,7 @@ async function verifyMembership(identifier: string): Promise<CheckResponse> {
 function VerifyResultBadge({ result }: { result: CheckResponse }) {
   return (
     <Badge
-      className="h-auto justify-start px-3 py-2.5 text-sm font-bold whitespace-normal"
+      className="h-auto justify-start whitespace-normal"
       variant={result.status === 'active' ? 'secondary' : 'destructive'}
     >
       {result.message}
@@ -110,42 +110,40 @@ export function VerifyForm({ identifierType }: VerifyFormProps) {
     >
       <Card className="shadow-card" size="sm">
         <CardContent>
-          <FieldGroup>
-            <Field>
-              <FieldLabel className="font-bold" htmlFor="identifier">
-                {config.label}
-              </FieldLabel>
-              <Input
-                className="min-h-10 bg-paper px-3"
-                autoCapitalize="none"
-                autoComplete="off"
-                id="identifier"
-                inputMode="text"
-                name="identifier"
-                onChange={(event) => {
-                  const raw = event.target.value
-                  setIdentifier(config.formatInput ? config.formatInput(raw) : raw)
-                }}
-                placeholder={config.placeholder}
-                required
-                value={identifier}
-              />
-            </Field>
-          </FieldGroup>
+          <div className="flex flex-col gap-3">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="identifier">{config.label}</FieldLabel>
+                <Input
+                  className="min-h-10"
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  id="identifier"
+                  inputMode="text"
+                  name="identifier"
+                  onChange={(event) => {
+                    const raw = event.target.value
+                    setIdentifier(config.formatInput ? config.formatInput(raw) : raw)
+                  }}
+                  placeholder={config.placeholder}
+                  required
+                  value={identifier}
+                />
+              </Field>
+            </FieldGroup>
+            <Button className="min-h-10 w-full" disabled={isSubmitting} type="submit">
+              {isSubmitting ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Verifying...
+                </>
+              ) : (
+                'Verify membership'
+              )}
+            </Button>
+            {result ? <VerifyResultBadge result={result} /> : null}
+          </div>
         </CardContent>
-        <CardFooter className="flex-col items-stretch gap-3 border-t-0 bg-transparent">
-          <Button className="min-h-10 w-full font-extrabold" disabled={isSubmitting} type="submit">
-            {isSubmitting ? (
-              <>
-                <Spinner data-icon="inline-start" />
-                Verifying...
-              </>
-            ) : (
-              'Verify membership'
-            )}
-          </Button>
-          {result ? <VerifyResultBadge result={result} /> : null}
-        </CardFooter>
       </Card>
     </form>
   )
