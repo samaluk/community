@@ -25,3 +25,8 @@ Use the default canonical triage labels: `needs-triage`, `needs-info`, `ready-fo
 ### Domain docs
 
 Use a single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
+
+### Linting
+
+After making UI changes, run `pnpm check:lint` and fix all errors. Design-system
+contracts live in `.oxlintrc.tailwind.json` (`shadcn/*` rules).
