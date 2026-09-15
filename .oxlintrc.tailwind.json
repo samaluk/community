@@ -5,13 +5,45 @@
     "typeCheck": false
   },
   "plugins": [],
-  "jsPlugins": ["oxlint-tailwindcss"],
+  "jsPlugins": ["oxlint-tailwindcss", "@shadcn/lint"],
   "settings": {
     "tailwindcss": {
       "entryPoint": "apps/web/src/app/(frontend)/styles.css"
     }
   },
   "rules": {
+    // Custom --text-* / --shadow-* theme keys are font sizes and shadows, but
+    // @shadcn/lint 0.1.0 classifies them as colors: https://github.com/shadcn-ui/lint/issues/8
+    "shadcn/no-restyle": [
+      "error",
+      {
+        "allow": [
+          "layout",
+          "shadow-card",
+          "shadow-nav-panel",
+          "shadow-map-pin"
+        ]
+      }
+    ],
+    "shadcn/no-raw-colors": [
+      "error",
+      {
+        "allow": [
+          "text-label",
+          "text-meta",
+          "text-body-sm",
+          "text-body",
+          "text-title",
+          "text-title-sm",
+          "text-hero",
+          "text-hero-sm"
+        ]
+      }
+    ],
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "error",
+    "shadcn/no-unknown-classes": "error",
+    "shadcn/require-static-classes": "error",
     "tailwindcss/no-unknown-classes": "warn",
     "tailwindcss/no-duplicate-classes": "warn",
     "tailwindcss/no-conflicting-classes": "warn",

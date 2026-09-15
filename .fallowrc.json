@@ -28,6 +28,7 @@
     "class-variance-authority",
     "@next/playwright",
     "shadcn",
+    "@shadcn/lint",
     "tw-animate-css",
     "tailwindcss"
   ],
@@ -65,6 +66,7 @@
       "dup:c77b3abb6f87acd9-4:2",
       "dup:c77b3abb6f87acd9-5:2",
       "dup:c77b3abb6f87acd9-6:2",
+      "dup:c77b3abb6f87acd9-r2:2",
       "dup:f7c28f72:2",
       // styles.css: the @theme token-mapping block and the :root value
       // definitions are two different concerns that happen to both be long

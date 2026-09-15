@@ -30,7 +30,8 @@
         "oxfmt",
         "oxlint",
         "oxlint-tailwindcss",
-        "oxlint-tsgolint"
+        "oxlint-tsgolint",
+        "@shadcn/lint"
       ],
       "groupName": "Lint and format tooling",
       "groupSlug": "lint-format-tooling"

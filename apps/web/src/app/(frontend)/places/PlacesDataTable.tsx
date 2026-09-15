@@ -54,9 +54,9 @@ export function PlacesDataTable({
           columns={hideableColumns.map((id) => ({ id, label: columnLabels[id] }))}
         />
       </div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg border bg-card [&_thead]:bg-muted">
         <Table>
-          <TableHeader className="bg-muted">
+          <TableHeader>
             <TableRow>
               <TableHead data-column="title">
                 <ColumnLabel
@@ -110,11 +110,10 @@ export function PlacesDataTable({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  className="h-24 text-center text-muted-foreground"
-                  colSpan={showDistance ? 7 : 6}
-                >
-                  No se encontraron lugares para los filtros seleccionados
+                <TableCell className="h-24 text-center" colSpan={showDistance ? 7 : 6}>
+                  <span className="text-muted-foreground">
+                    No se encontraron lugares para los filtros seleccionados
+                  </span>
                 </TableCell>
               </TableRow>
             )}

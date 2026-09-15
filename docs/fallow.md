@@ -96,7 +96,7 @@ boundary violations are errors — and with zero debt, any finding blocks.
 Semantic mode with near detection, an 8-line/60-token floor,
 `minOccurrences: 2`, and import wiring ignored. Generated surfaces are
 excluded via `duplicates.ignore` (migrations, Payload-generated admin routes).
-Ten clone groups are recorded in `ignoredClones` as reviewed exceptions —
+Eleven clone groups are recorded in `ignoredClones` as reviewed exceptions —
 vendored UI patterns and intentional CSS variants — each keyed
 `<fingerprint>:<occurrence count>`, so any content or count change re-reports
 the group.

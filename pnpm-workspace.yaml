@@ -5,6 +5,7 @@ minimumReleaseAgeStrict: true
 minimumReleaseAgeExclude:
   - "fallow*"
   - "@fallow-cli/**"
+  - "@shadcn/lint"
 
 peerDependencyRules:
   allowedVersions:

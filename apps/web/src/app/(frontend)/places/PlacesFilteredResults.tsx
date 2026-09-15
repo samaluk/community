@@ -71,10 +71,12 @@ function toUserLocation(userGeo: PlacesResultsModel['userGeo']) {
 function EmptyResultsCard({ showDistance }: { showDistance: boolean }) {
   return (
     <Card className="min-w-0" size="sm">
-      <CardContent className="py-6 text-sm text-muted-foreground">
-        {showDistance
-          ? 'No hay lugares con coordenadas dentro del radio elegido. Prueba aumentar la distancia máxima.'
-          : 'No hay lugares para los filtros seleccionados.'}
+      <CardContent>
+        <p className="py-6 text-sm text-muted-foreground">
+          {showDistance
+            ? 'No hay lugares con coordenadas dentro del radio elegido. Prueba aumentar la distancia máxima.'
+            : 'No hay lugares para los filtros seleccionados.'}
+        </p>
       </CardContent>
     </Card>
   )
@@ -92,27 +94,29 @@ function PlaceResultCard({ index, place }: { index: number; place: PlaceMapItem 
         </div>
         <CardTitle>{place.title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        {place.summary ? (
-          <p className="max-w-none text-base text-muted max-[760px]:text-sm max-[760px]:leading-snippet-sm">
-            {place.summary}
-          </p>
-        ) : null}
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
-          <Link
-            className={cn(buttonVariants({ variant: 'link' }), 'font-extrabold')}
-            href={`/places/${place.slug}`}
-          >
-            Ver ficha
-          </Link>
-          <a
-            className={cn(buttonVariants({ variant: 'link' }), 'font-extrabold')}
-            href={getGoogleMapsUrl(place)}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Google Maps
-          </a>
+      <CardContent>
+        <div className="flex flex-col gap-2">
+          {place.summary ? (
+            <p className="max-w-none text-base text-muted max-[760px]:text-sm max-[760px]:leading-snippet-sm">
+              {place.summary}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            <Link
+              className={cn(buttonVariants({ variant: 'link' }), 'font-extrabold')}
+              href={`/places/${place.slug}`}
+            >
+              Ver ficha
+            </Link>
+            <a
+              className={cn(buttonVariants({ variant: 'link' }), 'font-extrabold')}
+              href={getGoogleMapsUrl(place)}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Google Maps
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>
