@@ -83,14 +83,16 @@ export function DocCard({ badges, body, href, image, linkLabel, title }: DocCard
         <div className="flex flex-wrap gap-2">{badges}</div>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        <RichSnippet body={body} />
-        <Link
-          className={cn(buttonVariants({ variant: 'link' }), 'w-fit font-extrabold')}
-          href={href}
-        >
-          {linkLabel}
-        </Link>
+      <CardContent>
+        <div className="flex flex-col gap-2">
+          <RichSnippet body={body} />
+          <Link
+            className={cn(buttonVariants({ variant: 'link' }), 'w-fit font-extrabold')}
+            href={href}
+          >
+            {linkLabel}
+          </Link>
+        </div>
       </CardContent>
     </Card>
   )
