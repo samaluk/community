@@ -28,6 +28,7 @@
     "class-variance-authority",
     "@next/playwright",
     "shadcn",
+    "@shadcn/lint",
     "tw-animate-css",
     "tailwindcss"
   ],
