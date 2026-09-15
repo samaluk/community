@@ -5,7 +5,11 @@
     "typeCheck": false
   },
   "plugins": [],
-  "jsPlugins": ["oxlint-tailwindcss"],
+  "jsPlugins": [
+    "oxlint-tailwindcss",
+    // Enable shadcn/* rules here: https://github.com/shadcn-ui/lint#rules
+    "@shadcn/lint"
+  ],
   "settings": {
     "tailwindcss": {
       "entryPoint": "apps/web/src/app/(frontend)/styles.css"
