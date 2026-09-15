@@ -145,9 +145,7 @@ export function PlacesLocationFilter() {
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <Label className="text-sm font-medium text-foreground" htmlFor="places-max-distance">
-            Cerca de ti
-          </Label>
+          <Label htmlFor="places-max-distance">Cerca de ti</Label>
           <p className="max-w-prose text-sm text-muted-foreground">
             Tu ubicación se guarda en una cookie de sesión segura en este navegador. No se incluye
             al compartir el enlace de la página.
@@ -238,9 +236,9 @@ function DistanceControls({
         </p>
       )}
       <div className="flex flex-col gap-2">
-        <Label className="text-xs font-normal text-muted-foreground" htmlFor="places-max-distance">
+        <label className="text-xs font-normal text-muted-foreground" htmlFor="places-max-distance">
           Distancia máxima: {maxKm} km
-        </Label>
+        </label>
         <SliderBlock
           disabled={disabled}
           maxKm={maxKm}

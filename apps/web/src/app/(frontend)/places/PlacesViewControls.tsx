@@ -5,8 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -166,24 +165,21 @@ export function PlacesViewControls({ controls }: PlacesViewControlsProps) {
       <PlacesLocationFilter />
       <div className="grid grid-cols-places-filters gap-2 max-[900px]:grid-cols-2 max-[560px]:grid-cols-1">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-xs font-normal text-muted-foreground" htmlFor="places-search">
+          <label className="text-xs font-normal text-muted-foreground" htmlFor="places-search">
             Buscar lugar
-          </Label>
-          <div className="relative">
-            <SearchIcon
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-s-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-              data-icon="inline-start"
-            />
-            <Input
-              className="ps-8"
+          </label>
+          <InputGroup>
+            <InputGroupAddon>
+              <SearchIcon aria-hidden="true" />
+            </InputGroupAddon>
+            <InputGroupInput
               defaultValue={query}
               id="places-search"
               key={query}
               onChange={(event) => updateSearch(event.target.value)}
               placeholder="Nombre o dirección"
             />
-          </div>
+          </InputGroup>
         </div>
         <FilterSelect
           id="places-filter-access-type"
@@ -231,9 +227,9 @@ function FilterSelect({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="text-xs font-normal text-muted-foreground" htmlFor={id}>
+      <label className="text-xs font-normal text-muted-foreground" htmlFor={id}>
         {label}
-      </Label>
+      </label>
       <Select
         items={items}
         onValueChange={(nextValue) => {
