@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { defaultMaxDistanceKm, maxMaxDistanceKm, minMaxDistanceKm } from '@/lib/placesGeo'
 import { createStoredUserGeo, type StoredUserGeo } from '@/lib/placesUserGeo'
+import { cn } from '@/lib/utils'
 
 import { usePlacesGeo } from './PlacesGeoContext'
 
@@ -236,7 +237,13 @@ function DistanceControls({
         </p>
       )}
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-normal text-muted-foreground" htmlFor="places-max-distance">
+        <label
+          className={cn(
+            'text-xs font-normal text-muted-foreground',
+            disabled && 'pointer-events-none opacity-50',
+          )}
+          htmlFor="places-max-distance"
+        >
           Distancia máxima: {maxKm} km
         </label>
         <SliderBlock

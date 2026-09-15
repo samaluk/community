@@ -54,7 +54,7 @@ export function PlacesDataTable({
           columns={hideableColumns.map((id) => ({ id, label: columnLabels[id] }))}
         />
       </div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg border bg-card [&_thead]:bg-muted">
         <Table>
           <TableHeader>
             <TableRow>
