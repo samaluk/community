@@ -188,15 +188,23 @@ pnpm fallow:ci        # Strict audit across dead code, duplication, and code hea
 
 ### Git Hooks
 
-Local verification hooks are managed by [hk](https://hk.jdx.dev/):
+Local verification hooks are managed by [hk](https://hk.jdx.dev/) **2.0.1 or newer**.
+When upgrading from v1, upgrade the binary first (`brew upgrade hk`, or update
+the hk pin in your mise configuration, including `.mise.local.toml` if present,
+to `2.0.1` and run `mise install`), then rerun setup to refresh the hook launchers:
 
 ```sh
-# Setup hooks once
+# Set up or refresh hooks (validates the hk version and config first)
 bash scripts/setup-hk.sh
 ```
 
+For mise-managed tools, run setup with `HK_MISE=1` so Git hooks run through mise.
+See the [hk v2 upgrade guide](https://hk.jdx.dev/migration-v2) for changes to any
+personal hk configuration.
+
 - **Pre-commit**: Checks staged files with oxlint and oxfmt, then runs repo-wide typechecking, unit tests, and Fallow checks.
 - **Pre-push**: Verifies environment, typechecks, builds, generates test coverage, and executes the full Fallow CI gate.
+- **Manual fixes**: `hk fix` leaves fixes unstaged for review; use `hk fix --stage` to stage them. Pre-commit still automatically stages its fixes.
 
 ## Core Platform vs. Operator Separation
 

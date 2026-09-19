@@ -1,6 +1,6 @@
-amends "package://github.com/jdx/hk/releases/download/v1.54.1/hk@1.54.1#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v2.0.1/hk@2.0.1#/Config.pkl"
 
-min_hk_version = "1.54.0"
+min_hk_version = "2.0.1"
 
 default_branch = "master"
 
@@ -8,7 +8,7 @@ exclude = List("node_modules", ".next", "dist", "build", "coverage", ".vercel", 
 
 // Staged-file lint/format steps: hk filters staged files through these globs and
 // runs the command only on the matches, so an untouched part of the tree never
-// gets linted. Auto-fix mode re-stages the files hk modifies.
+// gets linted. Pre-commit re-stages fixes; `hk fix` requires --stage to do so.
 local web_sources = List(
   "apps/web/**/*.ts",
   "apps/web/**/*.tsx",
@@ -20,9 +20,8 @@ local web_sources = List(
 
 local fixers = new Mapping<String, Step> {
   // exclusive = true serializes the mutating fixers (definition order:
-  // oxlint → oxlint-tailwind → oxfmt). Fix steps hold shared read locks, so
-  // concurrent whole-file writers could interleave and silently lose edits;
-  // hk blocks the next fixer until the previous one finishes.
+  // oxlint → oxlint-tailwind → oxfmt). v2 file locks prevent overlapping
+  // writes; exclusivity also preserves this order before repo-wide gates.
   ["oxlint"] {
     glob = web_sources
     exclusive = true
@@ -71,6 +70,7 @@ local repo_checks = new Mapping<String, Step> {
 hooks {
   ["pre-commit"] {
     fix = true // run fix commands (auto-lint, auto-format) instead of check commands
+    stage = true // include auto-fixes in the commit
     stash = "git" // keep unstaged work safe while hk fixes and re-stages files
     steps {
       ...fixers
@@ -127,7 +127,8 @@ hooks {
   }
   // hk check / hk fix — the same fast suite as a CLI: `hk check` (read-only,
   // default: staged files, --all for the whole tree, --unstaged for working-tree
-  // changes), `hk fix` (auto-fixes). React Doctor and Fallow here are the
+  // changes), `hk fix` (auto-fixes without staging; --stage opts in).
+  // React Doctor and Fallow here are the
   // manual deep checks: full-tree scans (the hook variants are scoped — see
   // above). fallow:ci (the canonical full-scan alias) expects coverage from a
   // prior `pnpm test:coverage`.
@@ -146,6 +147,7 @@ hooks {
   }
   ["fix"] {
     fix = true
+    stage = false // review fixes before staging, or opt in with --stage
     stash = "git"
     steps = fixers
   }
