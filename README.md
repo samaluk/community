@@ -180,10 +180,11 @@ pnpm format           # Auto-format files with oxfmt
 
 ### Fallow Quality Gate
 
-The repository enforces a zero-debt steady state with [Fallow](docs/fallow.md):
+The repository runs strict quality gates with [Fallow](docs/fallow.md):
 
 ```sh
-pnpm fallow:ci        # Strict audit across dead code, duplication, and code health
+pnpm test:coverage    # Fresh coverage for exact CRAP scoring
+pnpm fallow:ci        # Strict changed-code audit plus combined full-repository scan
 ```
 
 ### Git Hooks

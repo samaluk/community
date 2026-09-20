@@ -1,13 +1,11 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
   "entry": [
-    "apps/web/src/app/**/{page,layout,loading,error,not-found,route,default,template}.{ts,tsx}",
     "apps/web/src/payload.config.ts",
     "apps/web/scripts/seed-e2e-fixtures.ts",
     "apps/web/scripts/resolve-postgres-url.ts"
   ],
   "ignorePatterns": [
-    "**/.next/**",
     "**/payload-types.ts",
     "**/payload-generated-schema.ts",
     "apps/web/tests/e2e/**",
@@ -24,8 +22,6 @@
     }
   ],
   "ignoreDependencies": [
-    "@base-ui/react",
-    "class-variance-authority",
     "@next/playwright",
     "shadcn",
     "@shadcn/lint",
@@ -46,13 +42,11 @@
     "require-suppression-reason": "error",
     "coverage-gaps": "warn"
   },
-   "duplicates": {
+  "duplicates": {
     "mode": "semantic",
     "near": true,
     "minLines": 8,
     "minTokens": 60,
-    "minOccurrences": 2,
-    "ignoreImports": true,
     // Reviewed clone exceptions — each key is "<fingerprint>:<occurrence count>",
     // so a content or count change makes the group reportable again.
     "ignoredClones": [
@@ -82,15 +76,8 @@
       "apps/web/src/app/(payload)/**"
     ]
   },
-  "health": {
-    "maxCyclomatic": 20,
-    "maxCognitive": 15,
-    "maxCrap": 30,
-    "maxUnitSize": 60
-  },
   "audit": {
-    "gate": "all",
-    "typeAware": true
+    "gate": "all"
   },
   "boundaries": {
     "zones": [
@@ -213,13 +200,7 @@
       ]
     }
   },
-  "includeEntryExports": false,
   "dynamicallyLoaded": [
     "apps/web/src/migrations/**"
-  ],
-  "workspaces": {
-    "packages": [
-      "apps/*"
-    ]
-  }
+  ]
 }
