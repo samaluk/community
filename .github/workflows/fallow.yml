@@ -102,6 +102,8 @@ jobs:
         with:
           command: audit
           gate: new-only
+          # Explicit true is required for the Action to forward the override.
+          type-aware: true
           type-aware-require: best-effort
           coverage: coverage/coverage-final.json
           coverage-root: ${{ needs.test.outputs.coverage-root }}
