@@ -3,12 +3,12 @@
   "extends": [
     "config:recommended",
     ":enableVulnerabilityAlerts",
+    ":disableRateLimiting",
     "helpers:pinGitHubActionDigests"
   ],
   "rangeStrategy": "pin",
   "separateMajorMinor": true,
-  "minimumReleaseAge": "3 days",
-  "prConcurrentLimit": 3,
+  "minimumReleaseAge": "1 day",
   "timezone": "UTC",
   "schedule": ["before 05:00 on Monday"],
   "packageRules": [
