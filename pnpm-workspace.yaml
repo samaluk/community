@@ -2,10 +2,7 @@ packages:
   - apps/*
 
 minimumReleaseAgeStrict: true
-minimumReleaseAgeExclude:
-  - "fallow*"
-  - "@fallow-cli/**"
-  - "@shadcn/lint"
+minimumReleaseAge: 1440
 
 peerDependencyRules:
   allowedVersions:
