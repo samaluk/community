@@ -64,7 +64,9 @@ export default buildConfig({
     pool: {
       connectionString: env.POSTGRES_URL,
     },
-    push: env.NODE_ENV !== 'production' && env.CI !== 'true',
+    // Greenfield schema sync is Drizzle push. Production applies committed
+    // migrations and does not push.
+    push: env.NODE_ENV !== 'production',
   }),
   sharp,
   plugins: [
