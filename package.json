@@ -48,12 +48,12 @@
     "typecheck": "pnpm --filter @community/web typecheck"
   },
   "devDependencies": {
-    "@shadcn/lint": "0.1.1",
+    "@shadcn/lint": "0.2.0",
     "fallow": "3.27.0",
-    "oxfmt": "0.68.0",
-    "oxlint": "1.83.0",
-    "oxlint-tailwindcss": "1.12.0",
-    "oxlint-tsgolint": "7.0.2002",
+    "oxfmt": "0.70.0",
+    "oxlint": "1.85.0",
+    "oxlint-tailwindcss": "1.14.0",
+    "oxlint-tsgolint": "7.0.2003",
     "react-doctor": "0.9.14"
   }
 }
