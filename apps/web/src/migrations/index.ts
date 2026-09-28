@@ -1,6 +1,5 @@
 import * as migration_20260604_000000_baseline from './20260604_000000_baseline'
 import * as migration_20260908_000000_optional_place_summary from './20260908_000000_optional_place_summary'
-import * as migration_20260928_000001_media_object_key from './20260928_000001_media_object_key'
 
 export const migrations = [
   {
@@ -12,10 +11,5 @@ export const migrations = [
     down: migration_20260908_000000_optional_place_summary.down,
     name: '20260908_000000_optional_place_summary',
     up: migration_20260908_000000_optional_place_summary.up,
-  },
-  {
-    down: migration_20260928_000001_media_object_key.down,
-    name: '20260928_000001_media_object_key',
-    up: migration_20260928_000001_media_object_key.up,
   },
 ]

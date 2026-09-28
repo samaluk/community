@@ -64,8 +64,9 @@ export default buildConfig({
     pool: {
       connectionString: env.POSTGRES_URL,
     },
-    // Greenfield schema sync is Drizzle push. Production applies committed
-    // migrations and does not push.
+    // Greenfield schema sync is Drizzle push, including outside production.
+    // Payload skips this flag when NODE_ENV is production; the build calls
+    // scripts/push-payload-schema.ts instead of recording a dev migration.
     push: env.NODE_ENV !== 'production',
   }),
   sharp,
