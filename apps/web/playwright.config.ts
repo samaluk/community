@@ -14,6 +14,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   globalSetup: './tests/e2e/global-setup.ts',
   forbidOnly: isCI,
+  globalTimeout: 180_000,
   retries: isCI ? 2 : 0,
   // Publishing tests invalidate shared cached listings and restore their fixtures.
   workers: 1,
@@ -41,7 +42,8 @@ export default defineConfig({
   ],
   webServer: {
     // Prefetching, ISR, and offline checks need a production build locally too.
-    command: 'pnpm start',
+    // pnpm 12.6 detaches the server's process group on Linux, preventing Playwright cleanup.
+    command: 'node --no-deprecation ./node_modules/next/dist/bin/next start',
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: isCI ? 120_000 : 60_000,

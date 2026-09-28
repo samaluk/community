@@ -50,6 +50,7 @@ jobs:
   build-and-integration:
     name: Build, integration, and E2E tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     env:
       POSTGRES_URL: postgres://postgres:postgres@localhost:5433/community
@@ -116,6 +117,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: E2E tests
+        timeout-minutes: 5
         working-directory: apps/web
         run: pnpm test:e2e
 
@@ -129,6 +131,7 @@ jobs:
           EXPOSE_TESTING_API: 1
 
       - name: Instant-navigation E2E tests
+        timeout-minutes: 5
         working-directory: apps/web
         run: pnpm test:e2e:instant
         env:
