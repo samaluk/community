@@ -34,13 +34,24 @@ function isPushableAdapter(db: DatabaseAdapter): db is PushableAdapter {
   return 'requireDrizzleKit' in db && 'schema' in db && 'drizzle' in db && 'extensions' in db
 }
 
-function isSchemaPushResult(value: unknown): value is SchemaPushResult {
-  if (typeof value !== 'object' || value === null) return false
-  if (!('apply' in value) || typeof value.apply !== 'function') return false
-  if (!('hasDataLoss' in value) || typeof value.hasDataLoss !== 'boolean') return false
-  if (!('warnings' in value) || !Array.isArray(value.warnings)) return false
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
 
-  return value.warnings.every((warning) => typeof warning === 'string')
+function isApply(value: unknown): value is () => Promise<void> {
+  return typeof value === 'function'
+}
+
+function isStringList(value: unknown): value is readonly string[] {
+  return Array.isArray(value) && value.every((warning) => typeof warning === 'string')
+}
+
+function isSchemaPushResult(value: unknown): value is SchemaPushResult {
+  if (!isRecord(value)) return false
+
+  return (
+    isApply(value.apply) && typeof value.hasDataLoss === 'boolean' && isStringList(value.warnings)
+  )
 }
 
 let exitCode = 0
