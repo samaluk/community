@@ -26,7 +26,8 @@ EXPOSE_TESTING_API=1 pnpm build:next
 EXPOSE_TESTING_API=1 pnpm test:e2e:instant
 ```
 
-Playwright starts `pnpm start` locally and in CI. It uses
+Playwright starts Next.js with Node, locally and in CI, so it can stop the
+server when the suite finishes. It uses
 `NEXT_PUBLIC_SERVER_URL`, defaulting to `http://localhost:3000`. For a different
 port, set both `PORT` and `NEXT_PUBLIC_SERVER_URL` for the server and tests. Local
 runs can reuse an already running production server at that URL. CI starts its
