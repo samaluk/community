@@ -99,7 +99,7 @@ jobs:
 
       - name: Migrate and seed E2E fixtures
         working-directory: apps/web
-        run: pnpm migrate && pnpm exec tsx scripts/seed-e2e-fixtures.ts
+        run: pnpm migrate && pnpm push:schema && pnpm exec tsx scripts/seed-e2e-fixtures.ts
         env:
           NODE_ENV: production
 
