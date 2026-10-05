@@ -128,6 +128,7 @@
         "patterns": [
           "apps/web/next.config.ts",
           "apps/web/playwright.config.ts",
+          "apps/web/postcss.config.mjs",
           "apps/web/vitest.config.mts",
           "apps/web/vitest.setup.ts"
         ]
