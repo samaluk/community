@@ -1,7 +1,7 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI and GitHub Action are pinned together at 3.27.0 and updated by Renovate.
+The CLI and GitHub Action are pinned together and updated by Renovate.
 The strict gate established in [issue #264](https://github.com/samaluk/community/issues/264)
 uses no baselines or regression allowances. Existing advisory duplication findings
 remain visible; a passing gate does not mean every advisory is absent.
@@ -40,8 +40,8 @@ fallow audit --coverage coverage/coverage-final.json && fallow --coverage covera
 
 Keep the audit: its changed-code verdict also covers duplication and styling.
 The combined command scans the whole repository, including untouched files.
-Keep the default human output for this gate: in 3.27, combined JSON output does
-not enforce the same issue exit codes. Use JSON for inspection, not as a drop-in
+Keep the default human output for this gate: it prints the failure summary that
+names the blocking findings. Use JSON for inspection, not as a drop-in
 replacement for this command's blocking output.
 
 Use the CLI directly for inspection and cleanup instead of adding script aliases:
