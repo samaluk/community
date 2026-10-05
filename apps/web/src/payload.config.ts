@@ -16,6 +16,7 @@ import { Media } from './collections/Media'
 import { Products } from './collections/Products'
 import { HomePage } from './globals/HomePage'
 import { SiteSettings } from './globals/SiteSettings'
+import { preserveLegacyVersionHtml } from './lib/preserveLegacyVersionHtml'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -60,6 +61,7 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
+    afterSchemaInit: [preserveLegacyVersionHtml],
     migrationDir: path.resolve(dirname, 'migrations'),
     pool: {
       connectionString: env.POSTGRES_URL,
