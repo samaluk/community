@@ -60,17 +60,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Docker setup needs no Node dependencies. Join before consuming pnpm/PATH.
       - uses: ./.github/actions/setup-toolchain
-
-      - name: Allocate app port
-        shell: bash
-        run: |
-          APP_PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
-          {
-            echo "APP_PORT=$APP_PORT"
-            echo "PORT=$APP_PORT"
-            echo "NEXT_PUBLIC_SERVER_URL=http://127.0.0.1:$APP_PORT"
-          } >> "$GITHUB_ENV"
+        id: toolchain
+        background: true
 
       - name: Start PostgreSQL
         run: |
@@ -97,6 +90,26 @@ jobs:
       - name: Create integration test database
         run: docker exec postgres psql -U postgres -d community -c "CREATE DATABASE community_test;"
 
+      - wait: toolchain
+
+      # Install Chromium while fixtures and builds run; E2E waits below.
+      - name: Install Playwright browsers
+        id: browsers
+        background: true
+        timeout-minutes: 5
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Allocate app port
+        shell: bash
+        run: |
+          APP_PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')"
+          {
+            echo "APP_PORT=$APP_PORT"
+            echo "PORT=$APP_PORT"
+            echo "NEXT_PUBLIC_SERVER_URL=http://127.0.0.1:$APP_PORT"
+          } >> "$GITHUB_ENV"
+
       - name: Migrate and seed E2E fixtures
         working-directory: apps/web
         run: pnpm migrate && pnpm push:schema && pnpm exec tsx scripts/seed-e2e-fixtures.ts
@@ -112,9 +125,7 @@ jobs:
       - name: Integration tests
         run: pnpm test:int
 
-      - name: Install Playwright browsers
-        working-directory: apps/web
-        run: pnpm exec playwright install --with-deps chromium
+      - wait: browsers
 
       - name: E2E tests
         timeout-minutes: 5
