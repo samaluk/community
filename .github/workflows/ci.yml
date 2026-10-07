@@ -62,6 +62,14 @@ jobs:
 
       - uses: ./.github/actions/setup-toolchain
 
+      # Install Chromium while database setup and builds run; E2E waits below.
+      - name: Install Playwright browsers
+        id: browsers
+        background: true
+        timeout-minutes: 5
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Allocate app port
         shell: bash
         run: |
@@ -112,9 +120,7 @@ jobs:
       - name: Integration tests
         run: pnpm test:int
 
-      - name: Install Playwright browsers
-        working-directory: apps/web
-        run: pnpm exec playwright install --with-deps chromium
+      - wait: browsers
 
       - name: E2E tests
         timeout-minutes: 5
