@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@shadcn/lint": "0.2.1",
-    "fallow": "3.31.0",
+    "fallow": "3.33.1",
     "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
     "oxlint-tailwindcss": "1.16.0",
