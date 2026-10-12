@@ -145,7 +145,7 @@ export function PlacesViewControls({ controls }: PlacesViewControlsProps) {
   const filtersActive = hasActiveFilters(query, searchParams, hasGeoFilter)
 
   return (
-    <div className="mt-6 flex flex-col gap-3">
+    <div className="mbs-6 flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ToggleGroup
           aria-label="Vista de lugares"
