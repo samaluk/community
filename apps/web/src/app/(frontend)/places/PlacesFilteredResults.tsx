@@ -39,7 +39,7 @@ export function PlacesFilteredResults({ results }: PlacesFilteredResultsProps) {
   }
 
   return (
-    <div className="mt-6 flex flex-col gap-3">
+    <div className="mbs-6 flex flex-col gap-3">
       <div className="grid grid-cols-places-cards items-start gap-4 max-[760px]:grid-cols-1 max-[760px]:gap-3">
         <PlacesMapLoader places={mapPlaceDocs} userLocation={userLocation} />
         <div

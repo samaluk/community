@@ -71,7 +71,7 @@ function SocialLink({ href, label }: { href: string | null | undefined; label: s
 
 function SiteFooter({ siteSettings }: { siteSettings: SiteSetting }) {
   return (
-    <footer className="mx-auto flex max-w-280 flex-wrap items-center justify-between gap-4 border-t border-line p-6 text-sm text-muted">
+    <footer className="mx-auto flex max-w-280 flex-wrap items-center justify-between gap-4 border-bs border-line p-6 text-sm text-muted">
       <span>{siteSettings.brandName}</span>
       <div className="flex gap-4">
         <Link className="no-underline hover:underline" href="/privacy">

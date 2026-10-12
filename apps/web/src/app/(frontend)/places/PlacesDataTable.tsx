@@ -48,7 +48,7 @@ export function PlacesDataTable({
   sortLinks,
 }: PlacesDataTableProps) {
   return (
-    <div className="mt-4 flex flex-col gap-3">
+    <div className="mbs-4 flex flex-col gap-3">
       <div className="flex items-center justify-end gap-3">
         <PlacesColumnControls
           columns={hideableColumns.map((id) => ({ id, label: columnLabels[id] }))}

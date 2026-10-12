@@ -89,7 +89,7 @@ async function HomePageContent() {
 
 function HomeHeroCtas() {
   return (
-    <div className="mt-5 flex flex-wrap gap-2">
+    <div className="mbs-5 flex flex-wrap gap-2">
       <Link
         className={cn(buttonVariants(), 'min-h-10 px-4 font-bold')}
         data-testid="home-verify-cta"
