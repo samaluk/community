@@ -189,21 +189,20 @@ function shouldRevalidatePublicContent(
   return isPublished(doc) || isPublished(previousDoc)
 }
 
+async function loadNextCache() {
+  try {
+    return await import('next/cache')
+  } catch (error) {
+    // Standalone Payload scripts have no Next cache runtime; requests inside
+    // Next must surface a load failure instead of silently skipping revalidation.
+    if (env.NEXT_RUNTIME) throw error
+    console.error(`Failed to load next/cache outside Next runtime`, error)
+    return null
+  }
+}
+
 async function revalidatePublicPaths(paths: string[], revalidate?: RevalidatePath) {
-  const revalidatePath =
-    revalidate ??
-    (await import('next/cache')
-      .then(({ revalidatePath: nextRevalidatePath }) => nextRevalidatePath)
-      .catch((error) => {
-        // `next/cache` resolves only inside Next's runtime. Standalone
-        // Payload scripts (for example, the Playwright fixture seed) run
-        // outside it; revalidation is best-effort there. Inside Next, a
-        // resolution failure must stay visible instead of silently disabling
-        // public-path revalidation, so rethrow.
-        if (env.NEXT_RUNTIME) throw error
-        console.error(`Failed to load next/cache outside Next runtime`, error)
-        return null
-      }))
+  const revalidatePath = revalidate ?? (await loadNextCache())?.revalidatePath
 
   if (!revalidatePath) return
 
@@ -230,17 +229,7 @@ async function revalidatePublicContentTags(
         .map((slug) => getPublicContentDocCacheTag(collection, slug)),
     ]),
   )
-  const revalidateTag =
-    revalidate ??
-    (await import('next/cache')
-      .then(({ revalidateTag: nextRevalidateTag }) => nextRevalidateTag)
-      .catch((error) => {
-        // Standalone Payload scripts do not have Next's cache runtime. Hooks
-        // remain best-effort there, while real Next requests surface failures.
-        if (env.NEXT_RUNTIME) throw error
-        console.error(`Failed to load next/cache outside Next runtime`, error)
-        return null
-      }))
+  const revalidateTag = revalidate ?? (await loadNextCache())?.revalidateTag
 
   if (!revalidateTag) return
 
