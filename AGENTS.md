@@ -30,3 +30,12 @@ Use a single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/ag
 
 After making UI changes, run `pnpm check:lint` and fix all errors. Design-system
 contracts live in `.oxlintrc.tailwind.json` (`shadcn/*` rules).
+
+### Fallow
+
+Follow [docs/fallow.md](docs/fallow.md) for code-health gates and upgrade reviews.
+For every Fallow Renovate PR, read the intervening upstream changelog and current
+docs, evaluate new capabilities that would benefit this repository, and adopt
+supported improvements to configuration, analysis, and agent workflows. Verify
+the staged audit, coverage-backed full gate, and PR feedback setup; a dependency
+bump and passing checks alone are not a complete upgrade review.

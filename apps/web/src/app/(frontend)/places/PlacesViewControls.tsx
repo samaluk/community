@@ -17,6 +17,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { placeAccessLabels, isPlaceAccessType } from '@/lib/places'
 import type { PlacesControlsModel } from '@/lib/placesBrowsing'
+import { applyParamUpdates } from '@/lib/urlSearchParams'
 
 import { usePlacesGeo } from './PlacesGeoContext'
 import { PlacesLocationFilter } from './PlacesLocationFilter'
@@ -27,17 +28,6 @@ export type PlacesViewControlsProps = {
 
 const allValue = '__all__'
 const allOptionLabel = 'Cualquiera'
-
-/** Applies key/value updates to a URLSearchParams copy; null deletes the key. */
-function applyParamUpdates(params: URLSearchParams, updates: Record<string, null | string>) {
-  for (const [key, value] of Object.entries(updates)) {
-    if (value) {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
-  }
-}
 
 const formatParamsHref = (pathname: string, params: URLSearchParams) => {
   const nextQuery = params.toString()

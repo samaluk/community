@@ -22,7 +22,10 @@
       "description": "Keep the Fallow package and GitHub Action together",
       "matchPackageNames": ["fallow", "fallow-rs/fallow"],
       "groupName": "Fallow",
-      "groupSlug": "fallow"
+      "groupSlug": "fallow",
+      "prBodyNotes": [
+        "Agent review: follow the [Fallow upgrade review](https://github.com/samaluk/community/blob/master/docs/fallow.md#reviewing-renovate-updates). Read the intervening upstream changelog and current docs, evaluate and adopt capabilities that benefit this repository, and validate the gates and PR feedback integration. Explain adopted improvements and relevant capabilities left unused."
+      ]
     },
     {
       "description": "Keep lint and formatting tools moving together",

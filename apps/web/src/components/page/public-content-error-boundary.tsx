@@ -3,7 +3,7 @@
 import { catchError, type ErrorInfo } from 'next/error'
 import type { ReactNode } from 'react'
 
-type PublicContentErrorBoundaryProps = {
+export type PublicContentErrorBoundaryProps = {
   children?: ReactNode
   title?: string
 }

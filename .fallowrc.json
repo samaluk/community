@@ -8,7 +8,6 @@
   "ignorePatterns": [
     "**/payload-types.ts",
     "**/payload-generated-schema.ts",
-    "apps/web/tests/e2e/**",
     "apps/web/playwright-report/**",
     "apps/web/test-results/**",
     "scripts/**"
@@ -22,11 +21,12 @@
     }
   ],
   "ignoreDependencies": [
-    "@next/playwright",
+    // Invoked interactively to manage vendored components.
     "shadcn",
+    // Loaded by .oxlintrc.tailwind.json; Fallow's Oxlint plugin reads only
+    // standard config filenames, not this secondary --config file.
     "@shadcn/lint",
-    "tw-animate-css",
-    "tailwindcss"
+    "oxlint-tailwindcss"
   ],
   "typeAware": {
     "enabled": true,
@@ -42,6 +42,14 @@
     "require-suppression-reason": "error",
     "coverage-gaps": "warn"
   },
+  "overrides": [
+    {
+      "files": ["apps/web/tests/e2e/**/*.spec.ts"],
+      // Unit coverage does not instrument Playwright assertion workflows.
+      // Keep their cyclomatic/cognitive checks without estimated CRAP penalties.
+      "rules": { "complexity-crap": "off" }
+    }
+  ],
   "duplicates": {
     "mode": "semantic",
     "near": true,
@@ -54,14 +62,19 @@
       // repeated blocks are upstream's own component patterns; extracting them
       // would diverge the vendored files from their source and make future
       // shadcn updates painful.
-      "dup:c77b3abb6f87acd9-1:2",
-      "dup:c77b3abb6f87acd9-2:5",
-      "dup:c77b3abb6f87acd9-3:2",
-      "dup:c77b3abb6f87acd9-4:2",
-      "dup:c77b3abb6f87acd9-5:2",
-      "dup:c77b3abb6f87acd9-6:2",
-      "dup:c77b3abb6f87acd9-r2:2",
+      "dup:c9cb01a7:2",
+      "dup:7eb884a9:2",
+      "dup:46bc0ba8:5",
+      "dup:b262cab0:2",
+      "dup:454cae80:2",
+      "dup:6dd286fe:2",
+      "dup:c7d3125b:2",
       "dup:f7c28f72:2",
+      // Next.js detail-route wiring: each route declares collection-specific
+      // metadata exports and props for the already-shared PayloadDocDetail.
+      // Keep these declarations next to their distinct document body renderers.
+      "dup:53b52e64:3",
+      "dup:df7d7378:2",
       // styles.css: the @theme token-mapping block and the :root value
       // definitions are two different concerns that happen to both be long
       // lists of custom properties.
@@ -172,7 +185,8 @@
           "logic",
           "access",
           "cms",
-          "config"
+          "config",
+          "scripts"
         ]
       },
       {

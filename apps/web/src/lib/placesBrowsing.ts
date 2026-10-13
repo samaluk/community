@@ -4,6 +4,7 @@ import type { PlaceMapItem } from '@/lib/places'
 import { annotatePlacesWithDistance, paginatePlaces } from '@/lib/placesGeo'
 import { getPlacesNearWhere } from '@/lib/placesLocation'
 import type { StoredUserGeo } from '@/lib/placesUserGeo'
+import { applyParamUpdates } from '@/lib/urlSearchParams'
 
 export type PlacesSort = {
   direction: 'asc' | 'desc'
@@ -341,16 +342,6 @@ function copySearchParams(
   for (const [key, value] of Object.entries(searchParams)) {
     const paramValue = Array.isArray(value) ? value[0] : value
     if (paramValue) target.set(key, paramValue)
-  }
-}
-
-function applyParamUpdates(target: URLSearchParams, updates: Record<string, null | string>) {
-  for (const [key, value] of Object.entries(updates)) {
-    if (value) {
-      target.set(key, value)
-    } else {
-      target.delete(key)
-    }
   }
 }
 
