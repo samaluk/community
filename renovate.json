@@ -10,7 +10,6 @@
   "separateMajorMinor": true,
   "minimumReleaseAge": "1 day",
   "timezone": "UTC",
-  "schedule": ["before 05:00 on Monday"],
   "packageRules": [
     {
       "description": "Group GitHub Actions updates while retaining digest pinning",
