@@ -54,6 +54,6 @@
     "oxlint": "1.88.0",
     "oxlint-tailwindcss": "1.16.0",
     "oxlint-tsgolint": "7.0.2004",
-    "react-doctor": "0.9.17"
+    "react-doctor": "0.9.18"
   }
 }
