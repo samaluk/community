@@ -89,6 +89,7 @@ export function DocCard({ badges, body, href, image, linkLabel, title }: DocCard
           <Link
             className={cn(buttonVariants({ variant: 'link' }), 'w-fit font-extrabold')}
             href={href}
+            prefetch={true}
           >
             {linkLabel}
           </Link>

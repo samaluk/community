@@ -166,6 +166,11 @@ document language for page content too. Operator metadata also streams. Header
 and footer have their own Suspense boundaries so resolving the hostname does
 not block the page's static navigation shell. This preserves the loading shell
 without caching one hostname's identity for another.
+
+Listing detail links explicitly enable per-link prefetching so the hostname's
+detail shell can be cached before an offline navigation. This adds a server
+prefetch per visible detail link; listings cap their document query at 20.
+
 The Payload admin integration wrappers explicitly wait for a request before
 authentication, keeping private administration outside prerendering. Preserve
 these `connection()` calls and the private layout's `instant = false` config

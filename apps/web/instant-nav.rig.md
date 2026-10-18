@@ -56,8 +56,10 @@ staff users and documents.
   reject successful prerendering.
 - `offline.e2e.spec.ts` disconnects the browser after a link's prefetch. It checks
   the shell while the browser cannot reach the server, then reconnects and checks
-  the content. A separate journey checks that a pending location Server Action
-  saves after reconnection and survives a reload.
+  the content. Listing detail links opt into per-link prefetching to resolve the
+  host-dependent shell; a routing-tree prefetch alone is insufficient. A separate
+  journey checks that a pending location Server Action saves after reconnection
+  and survives a reload.
 - `cms-isr.e2e.spec.ts` checks publishing and draft isolation for existing and
   newly published slugs against the running Next.js server, including
   invalidation of warmed Operator data caches.
