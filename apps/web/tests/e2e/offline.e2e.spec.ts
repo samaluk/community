@@ -1,41 +1,13 @@
 import { expect, test } from '@playwright/test'
 
+import { observePrefetchedShell } from './helpers/prefetchedShell'
+
 test('a prefetched article remains usable offline and after reconnecting', async ({
   context,
   page,
 }) => {
   const articlePath = '/articles/articulo-fixture-1'
-  const cdp = await context.newCDPSession(page)
-  const articleRscChunks = new Map<string, { buffered: Buffer[]; streamed: Buffer[] }>()
-  await cdp.send('Network.enable')
-  cdp.on('Network.responseReceived', ({ requestId, response }) => {
-    if (
-      new URL(response.url).pathname !== articlePath ||
-      response.mimeType !== 'text/x-component'
-    ) {
-      return
-    }
-
-    const chunks: { buffered: Buffer[]; streamed: Buffer[] } = { buffered: [], streamed: [] }
-    articleRscChunks.set(requestId, chunks)
-    void cdp
-      .send('Network.streamResourceContent', { requestId })
-      .then(({ bufferedData }) => {
-        if (bufferedData) chunks.buffered.push(Buffer.from(bufferedData, 'base64'))
-      })
-      .catch(() => {
-        // A response may finish before Chromium enables streaming for it.
-        void cdp
-          .send('Network.getResponseBody', { requestId })
-          .then(({ body, base64Encoded }) => {
-            chunks.buffered.push(Buffer.from(body, base64Encoded ? 'base64' : 'utf8'))
-          })
-          .catch(() => {})
-      })
-  })
-  cdp.on('Network.dataReceived', ({ requestId, data }) => {
-    if (data) articleRscChunks.get(requestId)?.streamed.push(Buffer.from(data, 'base64'))
-  })
+  const shell = await observePrefetchedShell(page, articlePath)
 
   try {
     await page.goto('/articles')
@@ -45,17 +17,7 @@ test('a prefetched article remains usable offline and after reconnecting', async
     await link.scrollIntoViewIfNeeded()
     await link.hover()
     // A route-tree prefetch has no shell data. Wait for the actual article segment.
-    await expect
-      .poll(
-        () =>
-          [...articleRscChunks.values()].some(({ buffered, streamed }) =>
-            Buffer.concat([...buffered, ...streamed]).includes(
-              Buffer.from('article-detail-back-link'),
-            ),
-          ),
-        { timeout: 10_000 },
-      )
-      .toBe(true)
+    await shell.waitUntilReady('article-detail-back-link')
 
     await context.setOffline(true)
     await expect(page.getByRole('status').filter({ hasText: "You're offline" })).toBeVisible()
@@ -67,7 +29,7 @@ test('a prefetched article remains usable offline and after reconnecting', async
     await expect(page.getByText("You're offline", { exact: false })).toHaveCount(0)
   } finally {
     await context.setOffline(false)
-    await cdp.detach()
+    await shell.close()
   }
 })
 

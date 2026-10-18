@@ -54,6 +54,7 @@ function HomeHeroCtas() {
         className={cn(buttonVariants(), 'min-h-10 px-4 font-bold')}
         data-testid="home-verify-cta"
         href="/verify"
+        prefetch={true}
       >
         Verify membership
       </Link>

@@ -167,9 +167,10 @@ and footer have their own Suspense boundaries so resolving the hostname does
 not block the page's static navigation shell. This preserves the loading shell
 without caching one hostname's identity for another.
 
-Listing detail links explicitly enable per-link prefetching so the hostname's
-detail shell can be cached before an offline navigation. This adds a server
-prefetch per visible detail link; listings cap their document query at 20.
+Listing detail links and the home page's Verify action explicitly enable
+per-link prefetching so their hostname-dependent UI can be cached before
+navigation. This adds a server prefetch per visible link; listings cap their
+document query at 20.
 
 The Payload admin integration wrappers explicitly wait for a request before
 authentication, keeping private administration outside prerendering. Preserve

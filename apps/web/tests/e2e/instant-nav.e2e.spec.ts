@@ -1,6 +1,8 @@
 import { instant } from '@next/playwright'
 import { expect, test } from '@playwright/test'
 
+import { observePrefetchedShell } from './helpers/prefetchedShell'
+
 /**
  * Instant-navigation guards for the public content flows (issue #191).
  *
@@ -84,24 +86,27 @@ test('home → Ver lugares CTA commits the places shell instantly', async ({ pag
 })
 
 test('home → Verify CTA commits instantly', async ({ page }) => {
-  // Smoke guard: /verify is fully static (no dynamic reads, no
-  // Suspense), so this lock asserts the prerendered page commits rather than
-  // exercising the shell mechanism. It regression-guards the AC but can
-  // never fail on this code path on its own.
-  await page.goto('/')
+  const shell = await observePrefetchedShell(page, '/verify')
 
-  const trigger = page.getByTestId('home-verify-cta')
-  await expect(trigger).toBeVisible({ timeout: 20_000 })
+  try {
+    await page.goto('/')
 
-  await instant(page, async () => {
-    await trigger.click()
-    await expect(
-      page.getByRole('heading', {
-        level: 1,
-        name: 'Verify active membership.',
-      }),
-    ).toBeVisible()
-  })
+    const trigger = page.getByTestId('home-verify-cta')
+    await expect(trigger).toBeVisible({ timeout: 20_000 })
+    await shell.waitUntilReady('Verify active membership.')
+
+    await instant(page, async () => {
+      await trigger.click()
+      await expect(
+        page.getByRole('heading', {
+          level: 1,
+          name: 'Verify active membership.',
+        }),
+      ).toBeVisible()
+    })
+  } finally {
+    await shell.close()
+  }
 })
 
 for (const mobile of [false, true]) {
