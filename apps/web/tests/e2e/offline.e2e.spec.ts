@@ -16,8 +16,10 @@ test('a prefetched article remains usable offline and after reconnecting', async
     await expect(link).toBeVisible()
     await link.scrollIntoViewIfNeeded()
     await link.hover()
-    // A route-tree prefetch has no shell data. Wait for the actual article segment.
+    // A route-tree prefetch has no shell data. Wait for the actual article segment,
+    // then let Next process the streamed response and settle its module requests.
     await shell.waitUntilReady('article-detail-back-link')
+    await page.waitForLoadState('networkidle')
 
     await context.setOffline(true)
     await expect(page.getByRole('status').filter({ hasText: "You're offline" })).toBeVisible()

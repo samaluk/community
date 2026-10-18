@@ -5,6 +5,7 @@ import {
   isPlatformAdmin,
   isStaff,
   isVersionEditorOrAdmin,
+  isVersionValidationManagerOrAdmin,
   ensureLexicalTargetsMatchOperator,
   ensureRequestHostOperator,
   getStaffAccessScope,
@@ -103,6 +104,25 @@ describe('tenant role access', () => {
       and: [{ 'version.operator': { equals: 101 } }, { 'version.operator': { in: [101] } }],
     })
     expect(await isVersionEditorOrAdmin(accessArgs(user, 202))).toBe(false)
+  })
+
+  it('scopes Membership history to the current Operator and admin/validation-manager role', async () => {
+    const user = {
+      id: 7,
+      tenants: [
+        { operator: 101, role: 'validation-manager' },
+        { operator: 202, role: 'admin' },
+      ],
+    }
+    const editor = { id: 8, tenants: [{ operator: 101, role: 'editor' }] }
+
+    expect(await isVersionValidationManagerOrAdmin(accessArgs(user, 101))).toEqual({
+      and: [{ 'version.operator': { equals: 101 } }, { 'version.operator': { in: [101, 202] } }],
+    })
+    expect(await isVersionValidationManagerOrAdmin(accessArgs(user, 202))).toEqual({
+      and: [{ 'version.operator': { equals: 202 } }, { 'version.operator': { in: [101, 202] } }],
+    })
+    expect(await isVersionValidationManagerOrAdmin(accessArgs(editor, 101))).toBe(false)
   })
 
   it('keeps platform administration separate from tenant membership roles', async () => {

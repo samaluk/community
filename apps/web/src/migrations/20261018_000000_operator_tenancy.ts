@@ -105,13 +105,13 @@ async function assignOperatorToCollections(db: MigrationDB): Promise<void> {
   ] as const
 
   for (const [table, constraint] of tenantTables) {
-    await db.execute(sql`ALTER TABLE public.${sql.raw(table)} ADD COLUMN operator_id integer`)
-    await db.execute(sql`UPDATE public.${sql.raw(table)} SET operator_id = 1`)
+    await db.execute(sql`ALTER TABLE public.${sql.identifier(table)} ADD COLUMN operator_id integer`)
+    await db.execute(sql`UPDATE public.${sql.identifier(table)} SET operator_id = 1`)
     await db.execute(
-      sql`ALTER TABLE public.${sql.raw(table)} ALTER COLUMN operator_id SET NOT NULL`,
+      sql`ALTER TABLE public.${sql.identifier(table)} ALTER COLUMN operator_id SET NOT NULL`,
     )
-    await db.execute(sql`ALTER TABLE ONLY public.${sql.raw(table)}
-      ADD CONSTRAINT ${sql.raw(constraint)} FOREIGN KEY (operator_id) REFERENCES public.operators(id) ON DELETE RESTRICT`)
+    await db.execute(sql`ALTER TABLE ONLY public.${sql.identifier(table)}
+      ADD CONSTRAINT ${sql.identifier(constraint)} FOREIGN KEY (operator_id) REFERENCES public.operators(id) ON DELETE RESTRICT`)
   }
 }
 
@@ -126,16 +126,16 @@ async function assignOperatorToVersions(db: MigrationDB): Promise<void> {
 
   for (const [table, constraint] of versionTables) {
     await db.execute(
-      sql`ALTER TABLE public.${sql.raw(table)} ADD COLUMN version_operator_id integer`,
+      sql`ALTER TABLE public.${sql.identifier(table)} ADD COLUMN version_operator_id integer`,
     )
-    await db.execute(sql`UPDATE public.${sql.raw(table)} SET version_operator_id = 1`)
+    await db.execute(sql`UPDATE public.${sql.identifier(table)} SET version_operator_id = 1`)
     await db.execute(
-      sql`ALTER TABLE public.${sql.raw(table)} ALTER COLUMN version_operator_id SET NOT NULL`,
+      sql`ALTER TABLE public.${sql.identifier(table)} ALTER COLUMN version_operator_id SET NOT NULL`,
     )
-    await db.execute(sql`ALTER TABLE ONLY public.${sql.raw(table)}
-      ADD CONSTRAINT ${sql.raw(constraint)} FOREIGN KEY (version_operator_id) REFERENCES public.operators(id) ON DELETE RESTRICT`)
-    await db.execute(sql`CREATE INDEX ${sql.raw(`${table}_version_version_operator_idx`)}
-      ON public.${sql.raw(table)} USING btree (version_operator_id)`)
+    await db.execute(sql`ALTER TABLE ONLY public.${sql.identifier(table)}
+      ADD CONSTRAINT ${sql.identifier(constraint)} FOREIGN KEY (version_operator_id) REFERENCES public.operators(id) ON DELETE RESTRICT`)
+    await db.execute(sql`CREATE INDEX ${sql.identifier(`${table}_version_version_operator_idx`)}
+      ON public.${sql.identifier(table)} USING btree (version_operator_id)`)
   }
 }
 

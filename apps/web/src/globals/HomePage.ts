@@ -44,6 +44,7 @@ export const HomePage: CollectionConfig = {
     read: publishedOrStaff,
     create: isEditorOrAdmin,
     update: isEditorOrAdmin,
+    delete: () => false,
     readVersions: isVersionEditorOrAdmin,
   },
   versions: draftVersions,

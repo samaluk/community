@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { PayloadRequest } from 'payload'
 
 import type { PlaceMapItem } from '@/lib/places'
 import {
@@ -45,6 +46,40 @@ it('keeps public Places queries scoped to one Operator and published documents',
           { _status: { equals: 'published' } },
           { city: { equals: 'Santiago' } },
         ],
+      },
+    }),
+  )
+})
+
+it('forwards the authenticated request for Operator-scoped draft Places reads', async () => {
+  const req: Partial<PayloadRequest> = {
+    headers: new Headers({ host: 'operator-a.example.test' }),
+    user: {
+      id: 17,
+      collection: 'users',
+      email: 'editor@example.test',
+      createdAt: '',
+      updatedAt: '',
+      tenants: [{ operator: 101, role: 'editor' }],
+    },
+  }
+  const find = vi.fn().mockResolvedValue({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
+  const places = createPayloadPlacesAdapter({
+    cmsQuery: { draft: true, overrideAccess: false, req },
+    operatorId: 101,
+    payload: { find } as never,
+  })
+
+  await places.find({ depth: 0, limit: 10, locale: 'es' })
+
+  expect(find).toHaveBeenCalledWith(
+    expect.objectContaining({
+      collection: 'places',
+      draft: true,
+      overrideAccess: false,
+      req,
+      where: {
+        and: [{ operator: { equals: 101 } }],
       },
     }),
   )

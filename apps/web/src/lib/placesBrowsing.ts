@@ -1,4 +1,4 @@
-import type { Payload, Where } from 'payload'
+import type { Payload, PayloadRequest, Where } from 'payload'
 
 import type { PlaceMapItem } from '@/lib/places'
 import { annotatePlacesWithDistance, paginatePlaces } from '@/lib/placesGeo'
@@ -113,6 +113,7 @@ export type PlacesAdapter = {
 export type PlacesCmsQueryOptions = {
   draft: boolean
   overrideAccess: boolean
+  req?: Partial<PayloadRequest>
 }
 
 export type LoadPlacesBrowsingArgs = {
@@ -152,6 +153,7 @@ export function createPayloadPlacesAdapter({
         collection: 'places',
         ...args,
         draft: cmsQuery.draft,
+        req: cmsQuery.req,
         // Public Local API reads bypass request-host access, so keep the
         // Operator and publication filters explicit in this trusted query.
         overrideAccess: !cmsQuery.draft || cmsQuery.overrideAccess,

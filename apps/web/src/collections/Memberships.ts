@@ -1,6 +1,11 @@
 import type { CollectionBeforeValidateHook, CollectionConfig } from 'payload'
 
-import { ensureRequestHostOperator, isAdmin, isValidationManagerOrAdmin } from '@/access/roles'
+import {
+  ensureRequestHostOperator,
+  isAdmin,
+  isValidationManagerOrAdmin,
+  isVersionValidationManagerOrAdmin,
+} from '@/access/roles'
 import { env } from '@/env'
 import { getMembershipPrivacyFields } from '@/lib/membershipPrivacy'
 import { validateRut } from '@/lib/rut'
@@ -28,6 +33,7 @@ export const Memberships: CollectionConfig = {
   },
   access: {
     read: isValidationManagerOrAdmin,
+    readVersions: isVersionValidationManagerOrAdmin,
     create: isValidationManagerOrAdmin,
     update: isValidationManagerOrAdmin,
     delete: isAdmin,

@@ -172,6 +172,9 @@ export const isVersionEditorOrAdmin: Access = (args) => roleAccess(args, ['admin
 export const isValidationManagerOrAdmin: Access = (args) =>
   roleAccess(args, ['admin', 'validation-manager'])
 
+export const isVersionValidationManagerOrAdmin: Access = (args) =>
+  roleAccess(args, ['admin', 'validation-manager'], true)
+
 export const isStaff: Access = (args) => roleAccess(args, ['admin', 'editor', 'validation-manager'])
 
 export const getStaffAccessScope = (args: AccessArgs): Promise<AccessResult> =>

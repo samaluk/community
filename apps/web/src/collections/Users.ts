@@ -25,6 +25,7 @@ export const Users: CollectionConfig = {
     create: isPlatformAdmin,
     update: ownerOrAdmin,
     delete: isPlatformAdmin,
+    unlock: isPlatformAdmin,
   },
   hooks: {
     beforeValidate: [enforceUserCreateAuthority],

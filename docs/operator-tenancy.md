@@ -123,6 +123,7 @@ workflow above and use only the disposable local environment.
    public traffic to it.
 2. Note its Operator ID. Select it in the CMS and configure its Site Settings,
    Media, and Home Page. Settings and Home Page are one-per-Operator collections.
+   Edit these singleton documents in place; their deletion is disabled.
 3. Assign staff through shared user administration or the trusted CLI:
 
    ```sh
@@ -144,7 +145,8 @@ workflow above and use only the disposable local environment.
    verification through that hostname.
 
 Platform Administrators manage shared staff assignments. Operator staff cannot
-grant platform authority or change another Operator's assignments.
+grant platform authority or change another Operator's assignments. Only Platform
+Administrators can unlock staff accounts after failed login attempts.
 
 ## Suspension and offboarding
 

@@ -12,6 +12,7 @@ export const SiteSettings: CollectionConfig = {
     read: operatorScopedRead,
     create: isEditorOrAdmin,
     update: isEditorOrAdmin,
+    delete: () => false,
   },
   hooks: {
     beforeValidate: [ensureRequestHostOperator],
