@@ -163,8 +163,10 @@ API. It returns lazy import functions by default, or module objects with
 `query`, but it is unavailable when the project uses webpack.
 
 The audit found no `import.meta.glob` usage and no other `meta.glob` references in
-`apps/web` source, scripts, tests, or configuration. The only file in
-`apps/web/public` is the homepage hero video. Public route content, including
+`apps/web` source, scripts, tests, or configuration. There is no
+`apps/web/public` directory in the current checkout. The homepage hero video is
+selected through Payload's `HomePage.heroVideo` upload field and served from the
+related `media` document's URL. Public route content, including
 places, articles, and products, is queried through Payload adapters and is not
 stored as a batch of local modules. The route code imports ordinary TypeScript
 modules directly, and the remaining local files are application code, tests, or
