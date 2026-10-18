@@ -125,9 +125,9 @@ cards appeared on that flow. The same server's overlay did not appear at
 
 ## #186: deployment check
 
-The Vercel project is linked in both the repository root and `apps/web` under
-project `community` (`prj_TVrFCtqtR1HbZoiwI8lfe3pjJnaL`). On 2026-09-07, the CLI
-listed no ready Preview deployments. The latest ready deployment was the
+The 2026-09-07 inspection identified Vercel project `community`
+(`prj_TVrFCtqtR1HbZoiwI8lfe3pjJnaL`). The CLI listed no ready Preview deployments.
+The latest ready deployment at that time was the
 production deployment `community-qpbaubi19-sebastianmaluks-projects.vercel.app`
 for commit `bf2468a3f6ddb94e13ab08cbfdbd075f2c146cef`.
 
@@ -143,17 +143,46 @@ cache-control: public,max-age=31536000,immutable
 The homepage response also returned `x-nextjs-prerender: 1` and referenced the
 same immutable path. The Payload media endpoint remains a separate mutable
 resource. A ranged request to `/api/media/file/mbqb-homepage-hero-video.mp4`
-returned `cache-control: public, max-age=31536000` without `immutable`, which is
-appropriate because it is not a content-addressed `/_next/static` asset.
+returned `cache-control: public, max-age=31536000` without `immutable`. This
+records its separate cache classification; it does not test replacing media
+content or prove that mutable resources remain fresh after deployment.
 
-This verifies automatic immutable-asset support on the current production
-deployment. It does not verify pending local changes until a deployment
-includes them. Preview verification remains blocked because the project has no
-isolated Preview environment variables or database. The Vercel deployment
-metadata identifies Turbopack and does not expose a project-level adapter
-setting that needs to be changed. Next's installed 16.3 docs caution that
-`supportsImmutableAssets` is primarily an adapter-author setting, so leave it
-to the Vercel adapter unless a deployment stops emitting the immutable path.
+This is historical production evidence of automatic immutable-asset support,
+not verification of subsequent changes or a Preview deployment.
+
+### Read-only recheck on 2026-10-18
+
+Vercel CLI 64.5.0 authenticated successfully and confirmed the same project in
+scope `sebastianmaluks-projects`, with framework `nextjs` and root directory
+`apps/web`. Both the Ready-only and unfiltered Preview deployment lists were
+empty, with no further pages. `vercel env ls preview --project community`
+returned zero variables. The all-environment metadata listed database
+configuration for Production and Development only; no database connection or
+other variable targeted Preview. No environment values were printed or pulled.
+
+Preview verification therefore remains blocked by missing isolated Preview
+configuration. The app requires `POSTGRES_URL`, `PAYLOAD_SECRET`,
+`PREVIEW_SECRET`, and `NEXT_PUBLIC_SERVER_URL`. Its build script runs Payload
+migrations and a schema push before the Next.js build, so a Preview must have
+its own database rather than reuse Production credentials. Any upload testing
+also needs storage isolated from Production. No deployment, database, remote
+configuration, or Production resource was changed during this recheck.
+
+`apps/web/vercel.json` disables automatic Git deployments for branches other
+than `master`. Once an operator supplies isolated Preview configuration, use a
+manual Preview deployment containing the implementation. Read its HTML and
+request a referenced hashed CSS/JavaScript asset with `vercel curl`: confirm
+`/_next/static/immutable/`, no `?dpl` query, and
+`cache-control: public,max-age=31536000,immutable`. Check a mutable public or
+Payload media resource separately, including its freshness after an update,
+before marking all of #186's acceptance criteria verified.
+
+The installed Next.js 16.4.2 docs still identify `supportsImmutableAssets` as
+primarily an adapter-author setting and warn that enabling it without provider
+support can break deployments. Leave it unset in the app configuration. The
+adapter guide requires immutable assets to remain available across deployments
+and non-immutable assets to retain their deployment-scoped handling; no app
+override is needed to request that contract from Vercel.
 
 ## #188: `import.meta.glob` audit
 
