@@ -1,9 +1,6 @@
 import Link from 'next/link'
-import config from '@payload-config'
-import { cacheLife } from 'next/cache'
 import { draftMode } from 'next/headers'
 import { Suspense } from 'react'
-import { getPayload } from 'payload'
 
 import {
   HomeHeroContent,
@@ -14,11 +11,11 @@ import {
   PageTitle,
 } from '@/components/page'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { getCmsQueryOptions } from '@/lib/cmsQuery'
-import { getSiteSettings } from '@/lib/siteSettings'
+import { getHomePageContent } from '@/lib/homePageContent'
+import { assertActiveOperator, getRequestOperator } from '@/lib/operator'
+import { getSiteSettings, type PublicSiteSettings } from '@/lib/siteSettings'
 import { cn } from '@/lib/utils'
-import { isPayloadUnavailableError } from '@/lib/payloadUnavailableError'
-import type { HomePage as HomePageGlobal, Media, SiteSetting } from '@/payload-types'
+import type { Media } from '@/payload-types'
 
 function getMediaUrl(media: number | Media | null | undefined) {
   if (!media || typeof media === 'number') {
@@ -26,47 +23,6 @@ function getMediaUrl(media: number | Media | null | undefined) {
   }
 
   return media.url ?? undefined
-}
-
-async function getPublishedHomePageContent(): Promise<HomePageGlobal | null> {
-  'use cache'
-  cacheLife('publicContent')
-
-  try {
-    const payload = await getPayload({ config })
-
-    return await payload.findGlobal({
-      slug: 'home-page',
-      depth: 1,
-      draft: false,
-      overrideAccess: false,
-    })
-  } catch (error) {
-    if (!isPayloadUnavailableError(error)) {
-      console.error('Failed to load home page content', error)
-    }
-
-    return null
-  }
-}
-
-async function getDraftHomePageContent(): Promise<HomePageGlobal | null> {
-  try {
-    const payload = await getPayload({ config })
-    const cmsQuery = await getCmsQueryOptions()
-
-    return await payload.findGlobal({
-      slug: 'home-page',
-      depth: 1,
-      ...cmsQuery,
-    })
-  } catch (error) {
-    if (!isPayloadUnavailableError(error)) {
-      console.error('Failed to load home page content', error)
-    }
-
-    return null
-  }
 }
 
 export default function HomePage() {
@@ -78,9 +34,13 @@ export default function HomePage() {
 }
 
 async function HomePageContent() {
-  const { isEnabled: draft } = await draftMode()
+  const [resolvedOperator, { isEnabled: draft }] = await Promise.all([
+    getRequestOperator(),
+    draftMode(),
+  ])
+  const operator = assertActiveOperator(resolvedOperator)
   const [homePage, siteSettings] = await Promise.all([
-    draft ? getDraftHomePageContent() : getPublishedHomePageContent(),
+    getHomePageContent(operator.id, operator.domain, draft),
     getSiteSettings(),
   ])
 
@@ -118,7 +78,7 @@ function HomePageView({
   siteSettings,
 }: {
   heroVideo: number | Media | null | undefined
-  siteSettings: SiteSetting
+  siteSettings: PublicSiteSettings
 }) {
   return (
     <PageShell variant="hero">

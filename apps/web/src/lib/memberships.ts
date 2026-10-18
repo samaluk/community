@@ -41,16 +41,27 @@ export const checkMembership = async (
 export const findMembershipByLookupHash = async (
   payload: Payload,
   lookupHash: string,
+  operatorId: number,
 ): Promise<MembershipRecord | null> => {
   const result = await payload.find({
     collection: 'memberships',
     depth: 0,
     limit: 1,
     pagination: false,
+    // This is an anonymous public verification lookup. Local API calls default
+    // to access control, which rejects the request without a staff user; the
+    // explicit Operator and HMAC filters below are the authorization boundary.
+    overrideAccess: true,
+    select: {
+      id: true,
+      identifier: true,
+      isActive: true,
+      lookupHash: true,
+      normalizedIdentifier: true,
+      notes: true,
+    },
     where: {
-      lookupHash: {
-        equals: lookupHash,
-      },
+      and: [{ lookupHash: { equals: lookupHash } }, { operator: { equals: operatorId } }],
     },
   })
 

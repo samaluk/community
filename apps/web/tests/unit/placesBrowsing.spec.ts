@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { PlaceMapItem } from '@/lib/places'
-import { loadPlacesBrowsing, type PlacesAdapter } from '@/lib/placesBrowsing'
+import {
+  createPayloadPlacesAdapter,
+  loadPlacesBrowsing,
+  type PlacesAdapter,
+} from '@/lib/placesBrowsing'
 
 const place = (overrides: Partial<PlaceMapItem> = {}): PlaceMapItem => ({
   accessType: 'open',
@@ -13,6 +17,37 @@ const place = (overrides: Partial<PlaceMapItem> = {}): PlaceMapItem => ({
   summary: 'Sample summary',
   title: 'Sample',
   ...overrides,
+})
+
+it('keeps public Places queries scoped to one Operator and published documents', async () => {
+  const find = vi.fn().mockResolvedValue({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
+  const places = createPayloadPlacesAdapter({
+    cmsQuery: { draft: false, overrideAccess: true },
+    operatorId: 101,
+    payload: { find } as never,
+  })
+
+  await places.find({
+    depth: 0,
+    limit: 10,
+    locale: 'es',
+    where: { city: { equals: 'Santiago' } },
+  })
+
+  expect(find).toHaveBeenCalledWith(
+    expect.objectContaining({
+      collection: 'places',
+      draft: false,
+      overrideAccess: true,
+      where: {
+        and: [
+          { operator: { equals: 101 } },
+          { _status: { equals: 'published' } },
+          { city: { equals: 'Santiago' } },
+        ],
+      },
+    }),
+  )
 })
 
 describe('loadPlacesBrowsing', () => {

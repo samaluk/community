@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
@@ -8,11 +9,14 @@ import sharp from 'sharp'
 
 import { env } from '@/env'
 
+import { isPlatformAdminField } from './access/roles'
+import { Operators } from './collections/Operators'
 import { Memberships } from './collections/Memberships'
 import { Articles } from './collections/Articles'
 import { Places } from './collections/Places'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { withOperatorField } from './collections/operatorField'
 import { Products } from './collections/Products'
 import { HomePage } from './globals/HomePage'
 import { SiteSettings } from './globals/SiteSettings'
@@ -38,8 +42,17 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media, Memberships, Places, Articles, Products],
-  globals: [SiteSettings, HomePage],
+  collections: [
+    Users,
+    Operators,
+    withOperatorField(Media),
+    withOperatorField(Memberships),
+    withOperatorField(Places),
+    withOperatorField(Articles),
+    withOperatorField(Products),
+    withOperatorField(SiteSettings, true),
+    withOperatorField(HomePage, true),
+  ],
   localization: {
     defaultLocale: 'es',
     fallback: true,
@@ -80,6 +93,49 @@ export default buildConfig({
         media: true,
       },
       token: env.BLOB_READ_WRITE_TOKEN,
+    }),
+    multiTenantPlugin({
+      cleanupAfterTenantDelete: false,
+      collections: {
+        articles: { customTenantField: true, useTenantAccess: false },
+        'home-page': { customTenantField: true, isGlobal: true, useTenantAccess: false },
+        media: { customTenantField: true, useTenantAccess: false },
+        memberships: { customTenantField: true, useTenantAccess: false },
+        places: { customTenantField: true, useTenantAccess: false },
+        products: { customTenantField: true, useTenantAccess: false },
+        'site-settings': { customTenantField: true, isGlobal: true, useTenantAccess: false },
+      },
+      tenantField: {
+        name: 'operator',
+      },
+      tenantsArrayField: {
+        arrayFieldName: 'tenants',
+        arrayTenantFieldName: 'operator',
+        arrayFieldAccess: {
+          create: isPlatformAdminField,
+          update: isPlatformAdminField,
+        },
+        rowFields: [
+          {
+            name: 'role',
+            type: 'select',
+            required: true,
+            defaultValue: 'editor',
+            options: [
+              { label: 'Admin', value: 'admin' },
+              { label: 'Editor', value: 'editor' },
+              { label: 'Validation Manager', value: 'validation-manager' },
+            ],
+            access: {
+              create: isPlatformAdminField,
+              update: isPlatformAdminField,
+            },
+          },
+        ],
+      },
+      tenantsSlug: Operators.slug,
+      userHasAccessToAllTenants: (user) =>
+        Boolean(user && typeof user === 'object' && 'platformAdmin' in user && user.platformAdmin),
     }),
   ],
 })

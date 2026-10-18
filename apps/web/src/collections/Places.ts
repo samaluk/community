@@ -12,14 +12,12 @@ export const Places: CollectionConfig = {
     singular: 'Place',
     plural: 'Places',
   },
+  ...publishing,
   admin: {
     ...publishing.admin,
     defaultColumns: ['title', 'accessType', 'region', 'updatedAt'],
     useAsTitle: 'title',
   },
-  access: publishing.access,
-  hooks: publishing.hooks,
-  versions: publishing.versions,
   fields: [
     localizedTitleField(),
     uniqueSlugField(),

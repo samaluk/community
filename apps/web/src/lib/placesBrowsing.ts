@@ -139,9 +139,11 @@ function isSortField(field: string): field is PlacesSort['field'] {
 
 export function createPayloadPlacesAdapter({
   cmsQuery,
+  operatorId,
   payload,
 }: {
   cmsQuery: PlacesCmsQueryOptions
+  operatorId: number
   payload: Pick<Payload, 'find'>
 }): PlacesAdapter {
   return {
@@ -149,7 +151,17 @@ export function createPayloadPlacesAdapter({
       const result = await payload.find({
         collection: 'places',
         ...args,
-        ...cmsQuery,
+        draft: cmsQuery.draft,
+        // Public Local API reads bypass request-host access, so keep the
+        // Operator and publication filters explicit in this trusted query.
+        overrideAccess: !cmsQuery.draft || cmsQuery.overrideAccess,
+        where: {
+          and: [
+            { operator: { equals: operatorId } },
+            ...(!cmsQuery.draft ? [{ _status: { equals: 'published' } }] : []),
+            ...(args.where ? [args.where] : []),
+          ],
+        },
       })
 
       return {

@@ -1,17 +1,23 @@
-import type { GlobalConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
 
-import { isEditorOrAdmin } from '@/access/roles'
+import { operatorScopedRead } from '@/access/operatorScopedRead'
+import { ensureRequestHostOperator, getRecordField, isEditorOrAdmin } from '@/access/roles'
 import { revalidateGlobalPublicContent } from '@/lib/publicContentPublishing'
+import { getOperatorId } from '@/lib/preview'
 
-export const SiteSettings: GlobalConfig = {
+export const SiteSettings: CollectionConfig = {
   slug: 'site-settings',
-  label: 'Site Settings',
+  labels: { singular: 'Site Settings', plural: 'Site Settings' },
   access: {
-    read: () => true,
+    read: operatorScopedRead,
+    create: isEditorOrAdmin,
     update: isEditorOrAdmin,
   },
   hooks: {
-    afterChange: [() => revalidateGlobalPublicContent()],
+    beforeValidate: [ensureRequestHostOperator],
+    afterChange: [
+      ({ doc }) => revalidateGlobalPublicContent(getOperatorId(getRecordField(doc, 'operator'))),
+    ],
   },
   fields: [
     {

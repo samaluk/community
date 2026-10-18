@@ -1,11 +1,18 @@
 import type { CollectionConfig } from 'payload'
 
+import { operatorScopedRead } from '@/access/operatorScopedRead'
+import { ensureRequestHostOperator, isAdmin, isEditorOrAdmin } from '@/access/roles'
+
 export const Media: CollectionConfig = {
   slug: 'media',
   access: {
-    // Public media URLs are served on the storefront.
-    // payload-doctor-disable-next-line open-access-function
-    read: () => true,
+    read: operatorScopedRead,
+    create: isEditorOrAdmin,
+    update: isEditorOrAdmin,
+    delete: isAdmin,
+  },
+  hooks: {
+    beforeValidate: [ensureRequestHostOperator],
   },
   fields: [
     {

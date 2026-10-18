@@ -1,16 +1,21 @@
 import { getPayload } from 'payload'
 import config from '../../src/payload.config.js'
+import { getTestOperator } from '../../scripts/getTestOperator.js'
 
 export const testUser = {
   email: 'dev@payloadcms.com',
   password: 'test',
-  role: 'admin' as const,
+}
+
+export type TestUserFixture = {
+  id: number
+  operatorId: number
 }
 
 /**
  * Seeds a test user for e2e admin tests.
  */
-export async function seedTestUser(): Promise<void> {
+export async function seedTestUser(): Promise<TestUserFixture> {
   const payload = await getPayload({ config })
 
   // Delete existing test user if any
@@ -24,17 +29,29 @@ export async function seedTestUser(): Promise<void> {
   })
 
   // Create fresh test user
-  await payload.create({
+  const operator = await getTestOperator(payload)
+  const user = await payload.create({
     collection: 'users',
-    data: testUser,
+    data: {
+      ...testUser,
+      tenants: [{ operator: operator.id, role: 'admin' }],
+    },
+    overrideAccess: true,
   })
+
+  return { id: user.id, operatorId: operator.id }
 }
 
 /**
  * Cleans up test user after tests
  */
-export async function cleanupTestUser(): Promise<void> {
+export async function cleanupTestUser(userId?: number): Promise<void> {
   const payload = await getPayload({ config })
+
+  if (userId !== undefined) {
+    await payload.delete({ collection: 'users', id: userId, overrideAccess: true })
+    return
+  }
 
   await payload.delete({
     collection: 'users',

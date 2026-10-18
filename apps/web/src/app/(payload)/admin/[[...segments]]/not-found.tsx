@@ -1,6 +1,6 @@
-/* THIS FILE WAS GENERATED AUTOMATICALLY BY PAYLOAD. */
-/* DO NOT MODIFY IT BECAUSE IT COULD BE REWRITTEN AT ANY TIME. */
+/* Payload integration wrapper: preserve the request boundary when regenerating. */
 import type { Metadata } from 'next'
+import { connection } from 'next/server'
 
 import config from '@payload-config'
 import { NotFoundPage, generatePageMetadata } from '@payloadcms/next/views'
@@ -15,10 +15,14 @@ type Args = {
   }>
 }
 
-export const generateMetadata = ({ params, searchParams }: Args): Promise<Metadata> =>
-  generatePageMetadata({ config, params, searchParams })
+export const generateMetadata = async ({ params, searchParams }: Args): Promise<Metadata> => {
+  await connection()
+  return generatePageMetadata({ config, params, searchParams })
+}
 
-const NotFound = ({ params, searchParams }: Args) =>
-  NotFoundPage({ config, params, searchParams, importMap })
+const NotFound = async ({ params, searchParams }: Args) => {
+  await connection()
+  return NotFoundPage({ config, params, searchParams, importMap })
+}
 
 export default NotFound

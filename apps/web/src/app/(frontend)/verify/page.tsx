@@ -1,13 +1,15 @@
+import { Suspense } from 'react'
+
+import { Card, CardContent } from '@/components/ui/card'
 import { PageKicker, PageLede, PageShell, PageTitle } from '@/components/page'
+import { Spinner } from '@/components/ui/spinner'
 import { getSiteSettings } from '@/lib/siteSettings'
 
 import { VerifyForm } from './VerifyForm'
 
 export const metadata = { title: 'Verify Membership' }
 
-export default async function VerifyPage() {
-  const siteSettings = await getSiteSettings()
-
+export default function VerifyPage() {
   return (
     <PageShell className="grid grid-cols-verify items-start gap-8 max-[760px]:grid-cols-1 max-[760px]:gap-4">
       <div>
@@ -18,7 +20,28 @@ export default async function VerifyPage() {
           never exposes member names or internal details.
         </PageLede>
       </div>
-      <VerifyForm identifierType={siteSettings.memberIdentifierType} />
+      <Suspense fallback={<VerifyFormFallback />}>
+        <OperatorVerifyForm />
+      </Suspense>
     </PageShell>
+  )
+}
+
+async function OperatorVerifyForm() {
+  const siteSettings = await getSiteSettings()
+
+  return <VerifyForm identifierType={siteSettings.memberIdentifierType} />
+}
+
+function VerifyFormFallback() {
+  return (
+    <Card aria-busy="true" className="shadow-card" size="sm">
+      <CardContent>
+        <output className="flex min-h-24 items-center justify-center gap-2 text-muted">
+          <Spinner />
+          <span>Loading membership verification options…</span>
+        </output>
+      </CardContent>
+    </Card>
   )
 }

@@ -1,19 +1,32 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Link from 'next/link'
-import React from 'react'
+import { notFound } from 'next/navigation'
+import React, { cache, Suspense } from 'react'
 
 import { RefreshRouteOnSave } from '@/components/cms/RefreshRouteOnSave'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { OfflineBanner } from '@/components/layout/OfflineBanner'
+import { OperatorLanguage } from '@/components/layout/OperatorLanguage'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
-import { getSiteSettings } from '@/lib/siteSettings'
-import type { SiteSetting } from '@/payload-types'
+import { env } from '@/env'
+import { OperatorResolutionError } from '@/lib/operator'
+import { DEFAULT_SITE_SETTINGS, getSiteSettings, type PublicSiteSettings } from '@/lib/siteSettings'
 
 import './styles.css'
 
+const getLayoutSiteSettings = cache(async () => {
+  try {
+    return await getSiteSettings()
+  } catch (error) {
+    if (error instanceof OperatorResolutionError) notFound()
+    throw error
+  }
+})
+
 export async function generateMetadata(): Promise<Metadata> {
-  const siteSettings = await getSiteSettings()
+  const siteSettings = await getLayoutSiteSettings()
 
   return {
     description: siteSettings.siteDescription ?? undefined,
@@ -69,7 +82,7 @@ function SocialLink({ href, label }: { href: string | null | undefined; label: s
   )
 }
 
-function SiteFooter({ siteSettings }: { siteSettings: SiteSetting }) {
+function SiteFooter({ siteSettings }: { siteSettings: PublicSiteSettings }) {
   return (
     <footer className="mx-auto flex max-w-280 flex-wrap items-center justify-between gap-4 border-bs border-line p-6 text-sm text-muted">
       <span>{siteSettings.brandName}</span>
@@ -84,19 +97,46 @@ function SiteFooter({ siteSettings }: { siteSettings: SiteSetting }) {
   )
 }
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-  const { children } = props
-  const siteSettings = await getSiteSettings()
+async function OperatorHeader() {
+  const [siteSettings, requestHeaders] = await Promise.all([getLayoutSiteSettings(), headers()])
+  const lang = siteSettings.lang || 'en'
+  const protocol = new URL(env.NEXT_PUBLIC_SERVER_URL).protocol
+  const serverURL = new URL(`${protocol}//${requestHeaders.get('host')}`).origin
 
   return (
-    <html lang={siteSettings.lang ?? 'en'} suppressHydrationWarning>
+    <div lang={lang}>
+      <OperatorLanguage lang={lang} />
+      <RefreshRouteOnSave serverURL={serverURL} />
+      <SiteHeader brandName={siteSettings.brandName} />
+    </div>
+  )
+}
+
+async function OperatorFooter() {
+  const siteSettings = await getLayoutSiteSettings()
+
+  return (
+    <div lang={siteSettings.lang || 'en'}>
+      <SiteFooter siteSettings={siteSettings} />
+    </div>
+  )
+}
+
+export default function RootLayout(props: { children: React.ReactNode }) {
+  const { children } = props
+
+  return (
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <RefreshRouteOnSave />
-          <SiteHeader brandName={siteSettings.brandName} />
+          <Suspense fallback={<SiteHeader brandName="Community" />}>
+            <OperatorHeader />
+          </Suspense>
           <OfflineBanner />
           <main>{children}</main>
-          <SiteFooter siteSettings={siteSettings} />
+          <Suspense fallback={<SiteFooter siteSettings={DEFAULT_SITE_SETTINGS} />}>
+            <OperatorFooter />
+          </Suspense>
           <Toaster />
         </ThemeProvider>
       </body>

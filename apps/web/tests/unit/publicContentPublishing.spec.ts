@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { emptyPublicContentSlug, getPublicContentStaticParams } from '@/lib/publicContentCache'
 import {
@@ -19,21 +19,21 @@ describe('Public Content Publishing', () => {
     const placesPreview = parsePreviewUrl(
       getPublicContentPreviewUrl({
         collection: 'places',
-        data: { slug: 'club-test' },
+        data: { operator: 1, slug: 'club-test' },
         locale: 'es',
       }),
     )
     const articlesPreview = parsePreviewUrl(
       getPublicContentPreviewUrl({
         collection: 'articles',
-        data: { slug: 'reglas-basicas' },
+        data: { operator: 1, slug: 'reglas-basicas' },
         locale: 'en',
       }),
     )
     const productPreview = parsePreviewUrl(
       getPublicContentPreviewUrl({
         collection: 'products',
-        data: { slug: 'polera' },
+        data: { operator: 1, slug: 'polera' },
         locale: 'es',
       }),
     )
@@ -100,10 +100,12 @@ describe('Public Content Publishing', () => {
       collection: 'places',
       doc: {
         _status: 'published',
+        operator: 1,
         slug: 'nuevo-slug',
       },
       previousDoc: {
         _status: 'published',
+        operator: 1,
         slug: 'slug-viejo',
       },
       revalidate,
@@ -114,6 +116,7 @@ describe('Public Content Publishing', () => {
       collection: 'places',
       doc: {
         _status: 'published',
+        operator: 1,
         slug: 'nuevo-slug',
       },
       revalidate,
@@ -128,11 +131,11 @@ describe('Public Content Publishing', () => {
       '/places/nuevo-slug',
     ])
     expect(revalidatedTags).toEqual([
-      { expire: 0, tag: 'public-content:places' },
-      { expire: 0, tag: 'public-content:places:nuevo-slug' },
-      { expire: 0, tag: 'public-content:places:slug-viejo' },
-      { expire: 0, tag: 'public-content:places' },
-      { expire: 0, tag: 'public-content:places:nuevo-slug' },
+      { expire: 0, tag: 'public-content:1:places' },
+      { expire: 0, tag: 'public-content:1:places:nuevo-slug' },
+      { expire: 0, tag: 'public-content:1:places:slug-viejo' },
+      { expire: 0, tag: 'public-content:1:places' },
+      { expire: 0, tag: 'public-content:1:places:nuevo-slug' },
     ])
   })
 
@@ -153,6 +156,36 @@ describe('Public Content Publishing', () => {
     })
 
     expect(revalidatedPaths).toEqual([])
+  })
+
+  it('logs path and cache-tag revalidation failures with their target', async () => {
+    const pathFailure = new Error('path unavailable')
+    const tagFailure = new Error('tag unavailable')
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    try {
+      await revalidatePublicContentDoc({
+        collection: 'places',
+        doc: { _status: 'published', operator: 1, slug: 'public-place' },
+        revalidate: () => {
+          throw pathFailure
+        },
+        revalidateTag: () => {
+          throw tagFailure
+        },
+      })
+
+      expect(logError).toHaveBeenCalledWith(
+        'Failed to revalidate public path "/places"',
+        pathFailure,
+      )
+      expect(logError).toHaveBeenCalledWith(
+        'Failed to revalidate public cache tag "public-content:1:places"',
+        tagFailure,
+      )
+    } finally {
+      logError.mockRestore()
+    }
   })
 })
 

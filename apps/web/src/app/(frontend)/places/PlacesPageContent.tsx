@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 import { readPlacesUserGeoCookie } from '@/lib/placesGeoCookie'
 import { createPayloadPlacesAdapter, loadPlacesBrowsing } from '@/lib/placesBrowsing'
 import { getCmsQueryOptions } from '@/lib/cmsQuery'
+import { assertActiveOperator, getRequestOperator } from '@/lib/operator'
 
 import { PlacesFilteredResults } from './PlacesFilteredResults'
 import { PlacesGeoProvider } from './PlacesGeoContext'
@@ -23,14 +24,19 @@ export async function PlacesPageContent({ searchParams }: PlacesPageContentProps
     readPlacesUserGeoCookie(),
     getPayload({ config }),
     getCmsQueryOptions(),
-  ]).then(async ([geo, payload, cmsQuery]) => ({
-    userGeo: geo,
-    browsing: await loadPlacesBrowsing({
-      places: createPayloadPlacesAdapter({ cmsQuery, payload }),
-      searchParams: params,
+    getRequestOperator(),
+  ]).then(async ([geo, payload, cmsQuery, resolvedOperator]) => {
+    const operator = assertActiveOperator(resolvedOperator)
+
+    return {
       userGeo: geo,
-    }),
-  }))
+      browsing: await loadPlacesBrowsing({
+        places: createPayloadPlacesAdapter({ cmsQuery, operatorId: operator.id, payload }),
+        searchParams: params,
+        userGeo: geo,
+      }),
+    }
+  })
 
   return (
     <Suspense fallback={null}>

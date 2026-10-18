@@ -12,14 +12,12 @@ export const Articles: CollectionConfig = {
     singular: 'Article',
     plural: 'Articles',
   },
+  ...publishing,
   admin: {
     ...publishing.admin,
     defaultColumns: ['title', 'category', 'difficulty', 'reviewedAt'],
     useAsTitle: 'title',
   },
-  access: publishing.access,
-  hooks: publishing.hooks,
-  versions: publishing.versions,
   fields: [
     localizedTitleField(),
     uniqueSlugField(),

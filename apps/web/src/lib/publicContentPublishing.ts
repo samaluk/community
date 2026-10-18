@@ -5,14 +5,19 @@ import type {
 } from 'payload'
 
 import { publishedOrStaff } from '@/access/publishedOrStaff'
-import { isEditorOrAdmin } from '@/access/roles'
+import {
+  ensureLexicalTargetsMatchOperator,
+  ensureRequestHostOperator,
+  isEditorOrAdmin,
+  isVersionEditorOrAdmin,
+} from '@/access/roles'
 import { env } from '@/env'
 import {
   getPublicContentCollectionCacheTag,
   getPublicContentDocCacheTag,
   type PublicContentCollection,
 } from '@/lib/publicContentCache'
-import { buildPreviewUrl, draftVersions } from '@/lib/preview'
+import { buildPreviewUrl, draftVersions, getOperatorId } from '@/lib/preview'
 
 export type { PublicContentCollection } from '@/lib/publicContentCache'
 
@@ -24,6 +29,7 @@ type PublicContentPublishingTarget = {
 
 export type SlugData = {
   slug?: unknown
+  operator?: unknown
 }
 
 export type MaybePublicDoc = SlugData & {
@@ -59,6 +65,7 @@ export function getPublicContentPublishing(collection: PublicContentCollection) 
       create: isEditorOrAdmin,
       delete: isEditorOrAdmin,
       read: publishedOrStaff,
+      readVersions: isVersionEditorOrAdmin,
       update: isEditorOrAdmin,
     },
     admin: {
@@ -67,12 +74,14 @@ export function getPublicContentPublishing(collection: PublicContentCollection) 
       },
       preview: (data, { locale }) => getPublicContentPreviewUrl({ collection, data, locale }),
     },
+    versions: draftVersions,
+    indexes: [{ fields: ['operator', 'slug'], unique: true }],
     hooks: {
       afterChange: [revalidatePublicContentChange(collection)],
       afterDelete: [revalidatePublicContentDelete(collection)],
+      beforeValidate: [ensureRequestHostOperator, ensureLexicalTargetsMatchOperator],
     },
-    versions: draftVersions,
-  } satisfies Pick<CollectionConfig, 'access' | 'admin' | 'hooks' | 'versions'>
+  } satisfies Pick<CollectionConfig, 'access' | 'admin' | 'hooks' | 'versions' | 'indexes'>
 }
 
 /**
@@ -85,15 +94,17 @@ export function getPublicContentPreviewUrl({
   locale,
 }: {
   collection: PublicContentCollection
-  data?: { slug?: unknown } | null
+  data?: { slug?: unknown; operator?: unknown } | null
   locale?: unknown
 }): string | null {
   const slug = typeof data?.slug === 'string' ? data.slug : ''
+  const operatorId = getOperatorId(data?.operator)
 
-  if (!slug) return null
+  if (!slug || operatorId === null) return null
 
   return buildPreviewUrl({
     collection,
+    operatorId,
     locale,
     path: getPublicContentDetailPath(collection, slug),
     slug,
@@ -128,8 +139,16 @@ export function getPublicContentRevalidationPaths({
   return Array.from(paths)
 }
 
-export async function revalidateGlobalPublicContent(revalidate?: RevalidatePath) {
+export async function revalidateGlobalPublicContent(
+  operatorId?: number | null,
+  revalidate?: RevalidatePath,
+  revalidateTag?: RevalidateTag,
+) {
   await revalidatePublicPaths(globalPublicPaths, revalidate)
+
+  if (operatorId === undefined || operatorId === null) return
+
+  await revalidateTags([`home-page:${operatorId}`, `site-settings:${operatorId}`], revalidateTag)
 }
 
 export async function revalidatePublicContentDoc(args: {
@@ -144,7 +163,7 @@ export async function revalidatePublicContentDoc(args: {
   await revalidatePublicPaths(getPublicContentRevalidationPaths(args), args.revalidate)
   await revalidatePublicContentTags(
     args.collection,
-    [getSlug(args.doc), getSlug(args.previousDoc)],
+    [args.doc, args.previousDoc],
     args.revalidateTag,
   )
 }
@@ -206,39 +225,56 @@ async function revalidatePublicPaths(paths: string[], revalidate?: RevalidatePat
 
   if (!revalidatePath) return
 
-  for (const path of paths) {
-    try {
-      revalidatePath(path)
-    } catch (error) {
-      if (env.NEXT_RUNTIME) throw error
-      console.error(`Failed to revalidate public path "${path}"`, error)
-    }
-  }
+  await revalidateEach(
+    paths,
+    revalidatePath,
+    (path) => `Failed to revalidate public path "${path}"`,
+  )
 }
 
 async function revalidatePublicContentTags(
   collection: PublicContentCollection,
-  slugs: Array<string | undefined>,
+  docs: Array<MaybePublicDoc | null | undefined>,
   revalidate?: RevalidateTag,
 ) {
   const tags = Array.from(
-    new Set([
-      getPublicContentCollectionCacheTag(collection),
-      ...slugs
-        .filter((slug): slug is string => Boolean(slug))
-        .map((slug) => getPublicContentDocCacheTag(collection, slug)),
-    ]),
+    new Set(
+      docs.flatMap((doc) => {
+        const operatorId = getOperatorId(doc?.operator)
+        if (operatorId === null) return []
+        const docTags = [getPublicContentCollectionCacheTag(operatorId, collection)]
+        const slug = getSlug(doc)
+        if (slug) docTags.push(getPublicContentDocCacheTag(operatorId, collection, slug))
+        return docTags
+      }),
+    ),
   )
+  await revalidateTags(tags, revalidate)
+}
+
+async function revalidateTags(tags: string[], revalidate?: RevalidateTag) {
   const revalidateTag = revalidate ?? (await loadNextCache())?.revalidateTag
 
   if (!revalidateTag) return
 
-  for (const tag of tags) {
+  await revalidateEach(
+    tags,
+    (tag) => revalidateTag(tag, { expire: 0 }),
+    (tag) => `Failed to revalidate public cache tag "${tag}"`,
+  )
+}
+
+async function revalidateEach<Value>(
+  values: Value[],
+  revalidate: (value: Value) => void,
+  getFailureMessage: (value: Value) => string,
+) {
+  for (const value of values) {
     try {
-      revalidateTag(tag, { expire: 0 })
+      revalidate(value)
     } catch (error) {
       if (env.NEXT_RUNTIME) throw error
-      console.error(`Failed to revalidate public cache tag "${tag}"`, error)
+      console.error(getFailureMessage(value), error)
     }
   }
 }

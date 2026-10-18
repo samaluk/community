@@ -5,6 +5,7 @@ import {
   corruptPublicContentPlaceBody,
   destroyPublicContentTestAdmin,
   loginPublicContentTestAdmin,
+  publicContentTestAuthHeaders,
 } from '../helpers/publicContentTestAdmin'
 
 const validRichTextBody = {
@@ -44,12 +45,12 @@ test('public detail content recovers from a server render error with retry', asy
   const admin = await createPublicContentTestAdmin()
   const slug = `public-content-retry-${Date.now()}`
   let placeId: number | undefined
-  let authHeaders: { Authorization: string } | undefined
+  let authHeaders: { Authorization: string; Cookie: string } | undefined
   let cleanupError: AggregateError | undefined
 
   try {
     const token = await loginPublicContentTestAdmin(request, admin)
-    authHeaders = { Authorization: `JWT ${token}` }
+    authHeaders = publicContentTestAuthHeaders(admin, token)
     // Omit the optional summary to exercise the migrated schema, not only
     // development databases whose constraints Payload synchronizes automatically.
     const createResponse = await request.post('/api/places?locale=es&draft=false', {
@@ -57,6 +58,7 @@ test('public detail content recovers from a server render error with retry', asy
         _status: 'published',
         body: validRichTextBody,
         accessType: 'open',
+        operator: admin.operatorId,
         slug,
         sourceUrl: `https://example.com/${slug}`,
         title: 'Retryable place',

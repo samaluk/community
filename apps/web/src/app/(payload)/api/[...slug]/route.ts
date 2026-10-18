@@ -10,10 +10,28 @@ import {
   REST_POST,
   REST_PUT,
 } from '@payloadcms/next/routes'
+import { getOperatorForHost, OperatorResolutionError } from '@/lib/operator'
 
-export const GET = REST_GET(config)
-export const POST = REST_POST(config)
-export const DELETE = REST_DELETE(config)
-export const PATCH = REST_PATCH(config)
-export const PUT = REST_PUT(config)
-export const OPTIONS = REST_OPTIONS(config)
+type RestArgs = { params: Promise<{ slug?: string[] }> }
+type RestHandler = (request: Request, args: RestArgs) => Promise<Response>
+
+const guardHost =
+  (handler: RestHandler): RestHandler =>
+  async (request, args) => {
+    try {
+      await getOperatorForHost(request.headers.get('host'))
+    } catch (error) {
+      if (error instanceof OperatorResolutionError)
+        return new Response('Not found', { status: 404 })
+      throw error
+    }
+
+    return handler(request, args)
+  }
+
+export const GET = guardHost(REST_GET(config))
+export const POST = guardHost(REST_POST(config))
+export const DELETE = guardHost(REST_DELETE(config))
+export const PATCH = guardHost(REST_PATCH(config))
+export const PUT = guardHost(REST_PUT(config))
+export const OPTIONS = guardHost(REST_OPTIONS(config))

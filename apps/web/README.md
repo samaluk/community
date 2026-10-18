@@ -103,21 +103,31 @@ pnpm seed:dev-from-prod
 
 This replaces your local `community` database with a copy of production (schema and content), then applies any pending Payload migrations.
 
-### Production admin user
+### Production staff user
 
 ```sh
 cd apps/web
 pnpm env:pull:production
-CMS_USER_EMAIL=you@example.com CMS_USER_PASSWORD="$(openssl rand -base64 32)" pnpm create:prod-user
+CMS_USER_EMAIL=you@example.com CMS_USER_PASSWORD="$(openssl rand -base64 32)" CMS_OPERATOR_ID=1 CMS_USER_ROLE=admin pnpm create:prod-user
 ```
 
-Use `CMS_USER_UPDATE_EXISTING=true` to reset an existing user password. `create:prod-user` loads `.env.production.local` when `NODE_ENV=production`.
+Replace `1` with the intended Operator ID. `CMS_USER_UPDATE_EXISTING=true` resets
+an existing user's password and updates that Operator's role while preserving
+their other assignments. Platform administration requires the explicit
+`CMS_PLATFORM_ADMIN=true` flag. `create:prod-user` loads `.env.production.local`
+when `NODE_ENV=production`. See the [Operator operations
+guide](../../docs/operator-tenancy.md) for bootstrap and lifecycle workflows.
 
 ## Current Foundation
 
-The app uses Payload with Postgres, Vercel Blob-backed media when `BLOB_READ_WRITE_TOKEN` is present, and built-in admin auth with `admin`, `editor`, and `validation-manager` staff roles.
+The app uses Payload with Postgres, Vercel Blob-backed media when
+`BLOB_READ_WRITE_TOKEN` is present, and built-in admin authentication. Staff
+assignments carry `admin`, `editor`, or `validation-manager` for each Operator;
+platform administration is a separate capability.
 
-Current CMS foundation includes collections `users`, `media`, `memberships`, `places`, `articles`, `products`, and globals `site-settings`, `home-page`.
+Current CMS collections include `users`, `operators`, `media`, `memberships`,
+`places`, `articles`, `products`, and the one-per-Operator collections
+`site-settings` and `home-page`.
 
 ## Live preview (server-rendered)
 

@@ -2,9 +2,11 @@ import type { APIRequestContext } from '@playwright/test'
 import { BasePayload, type Payload } from 'payload'
 
 import config from '../../src/payload.config.js'
+import { getTestOperator } from '../../scripts/getTestOperator'
 
 export type PublicContentTestAdmin = {
   email: string
+  operatorId: number
   password: string
   payload: Payload
   userId: number
@@ -16,13 +18,29 @@ export async function createPublicContentTestAdmin(): Promise<PublicContentTestA
   const payload = await new BasePayload().init({ config })
   const email = `public-content-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`
   const password = 'public-content-test-password'
+  const operator = await getTestOperator(payload)
+
   const user = await payload.create({
     collection: 'users',
-    data: { email, password, role: 'admin' },
+    data: {
+      email,
+      password,
+      tenants: [{ operator: operator.id, role: 'admin' }],
+    },
     overrideAccess: true,
   })
 
-  return { email, password, payload, userId: user.id }
+  return { email, operatorId: operator.id, password, payload, userId: user.id }
+}
+
+export function publicContentTestAuthHeaders(
+  admin: Pick<PublicContentTestAdmin, 'operatorId'>,
+  token: string,
+) {
+  return {
+    Authorization: `JWT ${token}`,
+    Cookie: `payload-tenant=${admin.operatorId}`,
+  }
 }
 
 export async function loginPublicContentTestAdmin(

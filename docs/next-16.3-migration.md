@@ -23,6 +23,23 @@ The app already used Next.js and `@next/playwright` 16.3.3 before this follow-up
 The changes below complete the remaining application work on that version.
 Preview deployment verification is still pending an isolated database.
 
+## Operator tenancy follow-up
+
+The original evidence below describes the single-Operator implementation from
+September. The subsequent [Operator isolation decision](adr/0006-operator-multi-tenancy.md)
+changes full-page prerendering: the same public path can now belong to different
+Operators depending on its hostname. Builds produce a generic loading shell
+and reserved detail parameter; Operator content and metadata resolve at request
+time. Published data remains cached by Operator ID and invalidated by
+Operator-scoped publishing tags. A warm data cache does not turn the whole
+host-dependent response into a shared fully prerendered page.
+
+The current browser checks therefore cover warm-data publishing invalidation,
+draft isolation, instant route shells, and alternating hosts with the same slug.
+The earlier top-20 build-slug and background full-page ISR observations remain
+historical evidence, rather than the current multi-Operator rendering contract.
+See the [operations guide](operator-tenancy.md) for migration and rollout limits.
+
 ## CMS rendering and recovery
 
 The three detail routes prerender up to 20 published Spanish-language slugs,
