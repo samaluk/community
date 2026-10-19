@@ -4,13 +4,13 @@ export type PublicContentCollection = 'places' | 'articles' | 'products'
 export const emptyPublicContentSlug = '__no-published-content__'
 
 /** Cache tag for one published public document lookup. */
-export function getPublicContentDocCacheTag(collection: string, slug: string) {
-  return `public-content:${collection}:${slug}`
+export function getPublicContentDocCacheTag(operatorId: number, collection: string, slug: string) {
+  return `public-content:${operatorId}:${collection}:${slug}`
 }
 
 /** Cache tag shared by a public collection's listing and slug enumeration. */
-export function getPublicContentCollectionCacheTag(collection: string) {
-  return `public-content:${collection}`
+export function getPublicContentCollectionCacheTag(operatorId: number, collection: string) {
+  return `public-content:${operatorId}:${collection}`
 }
 
 /** Ensure Cache Components receives one param even for an empty collection. */

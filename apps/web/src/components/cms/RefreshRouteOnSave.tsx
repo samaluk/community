@@ -3,15 +3,8 @@
 import { RefreshRouteOnSave as PayloadRefreshRouteOnSave } from '@payloadcms/live-preview-react'
 import { useRouter } from 'next/navigation'
 
-import { env } from '@/env'
-
-export function RefreshRouteOnSave() {
+export function RefreshRouteOnSave({ serverURL }: { serverURL: string }) {
   const router = useRouter()
 
-  return (
-    <PayloadRefreshRouteOnSave
-      refresh={() => router.refresh()}
-      serverURL={env.NEXT_PUBLIC_SERVER_URL}
-    />
-  )
+  return <PayloadRefreshRouteOnSave refresh={() => router.refresh()} serverURL={serverURL} />
 }

@@ -1,9 +1,25 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionBeforeValidateHook, CollectionConfig } from 'payload'
 
-import { isAdmin, isValidationManagerOrAdmin } from '@/access/roles'
+import {
+  ensureRequestHostOperator,
+  isAdmin,
+  isValidationManagerOrAdmin,
+  isVersionValidationManagerOrAdmin,
+} from '@/access/roles'
 import { env } from '@/env'
 import { getMembershipPrivacyFields } from '@/lib/membershipPrivacy'
 import { validateRut } from '@/lib/rut'
+
+export const populateMembershipPrivacyFields: CollectionBeforeValidateHook = ({ data }) => {
+  const identifier: unknown = data?.identifier
+  if (typeof identifier !== 'string' || identifier.length === 0) return data
+
+  const rut = validateRut(identifier)
+  const storedIdentifier = rut.ok ? `${rut.rut.body}${rut.rut.checkDigit}` : identifier
+  const privacyFields = getMembershipPrivacyFields(storedIdentifier, env.PAYLOAD_SECRET)
+
+  return privacyFields ? { ...data, identifier: storedIdentifier, ...privacyFields } : data
+}
 
 export const Memberships: CollectionConfig = {
   slug: 'memberships',
@@ -17,33 +33,17 @@ export const Memberships: CollectionConfig = {
   },
   access: {
     read: isValidationManagerOrAdmin,
+    readVersions: isVersionValidationManagerOrAdmin,
     create: isValidationManagerOrAdmin,
     update: isValidationManagerOrAdmin,
     delete: isAdmin,
   },
+  indexes: [
+    { fields: ['operator', 'normalizedIdentifier'], unique: true },
+    { fields: ['operator', 'lookupHash'], unique: true },
+  ],
   hooks: {
-    beforeValidate: [
-      ({ data }) => {
-        if (!data?.identifier || typeof data.identifier !== 'string') return data
-
-        const rutResult = validateRut(data.identifier)
-        const identifier = rutResult.ok
-          ? `${rutResult.rut.body}${rutResult.rut.checkDigit}`
-          : data.identifier
-
-        const privacyFields = getMembershipPrivacyFields(identifier, env.PAYLOAD_SECRET)
-
-        if (!privacyFields) {
-          return data
-        }
-
-        return {
-          ...data,
-          identifier,
-          ...privacyFields,
-        }
-      },
-    ],
+    beforeValidate: [ensureRequestHostOperator, populateMembershipPrivacyFields],
   },
   fields: [
     {
@@ -60,7 +60,6 @@ export const Memberships: CollectionConfig = {
       name: 'normalizedIdentifier',
       type: 'text',
       required: true,
-      unique: true,
       admin: {
         readOnly: true,
       },
@@ -69,7 +68,6 @@ export const Memberships: CollectionConfig = {
       name: 'lookupHash',
       type: 'text',
       required: true,
-      unique: true,
       access: {
         read: () => false,
       },

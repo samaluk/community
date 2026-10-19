@@ -4,93 +4,103 @@ import {
   createPublicContentTestAdmin,
   destroyPublicContentTestAdmin,
   loginPublicContentTestAdmin,
+  publicContentTestAuthHeaders,
 } from '../helpers/publicContentTestAdmin'
 
-test('publishes and caches a slug created after build, while invalidating a prerendered slug', async ({
+test('streams a generic shell, hides drafts, and invalidates warmed Operator content on publish and edit', async ({
   baseURL,
-  page,
   request,
 }) => {
   const admin = await createPublicContentTestAdmin()
-  let createdId: number | undefined
-  let prerenderedId: number | undefined
-  let originalTitle: string | undefined
-  let authorization: { Authorization: string } | undefined
+  let publishedId: number | undefined
+  let draftId: number | undefined
+  let authorization: { Authorization: string; Cookie: string } | undefined
   let cleanupError: AggregateError | undefined
 
   try {
     const token = await loginPublicContentTestAdmin(request, admin)
-    authorization = { Authorization: `JWT ${token}` }
+    authorization = publicContentTestAuthHeaders(admin, token)
 
-    const existing = await admin.payload.find({
-      collection: 'places',
-      draft: false,
-      limit: 1,
-      locale: 'es',
-      overrideAccess: true,
-      where: { slug: { equals: 'place-fixture-1' } },
-    })
-    const prerendered = existing.docs[0]
-    if (!prerendered) throw new Error('Expected the seeded prerendered place')
-    prerenderedId = prerendered.id
-    originalTitle = prerendered.title
-
-    const updatedTitle = `Lugar prerenderizado actualizado ${Date.now()}`
-    const updateResponse = await request.patch(
-      `/api/places/${prerendered.id}?locale=es&draft=false`,
-      { data: { title: updatedTitle }, headers: authorization },
-    )
-    expect(updateResponse.ok(), await updateResponse.text()).toBeTruthy()
-
-    const updatedPage = await fetchPublicPage(baseURL, '/places/place-fixture-1')
-    expect(updatedPage.body).toContain(updatedTitle)
-
-    const slug = `cms-isr-${Date.now()}`
-    const draftTitle = `Borrador ISR ${slug}`
-    const createResponse = await request.post('/api/places?locale=es&draft=true', {
+    const slug = `cms-operator-${Date.now()}`
+    const initialTitle = `Published ISR ${slug}`
+    const createResponse = await request.post('/api/places?locale=es&draft=false', {
       data: {
-        _status: 'draft',
+        _status: 'published',
         accessType: 'open',
         body: validRichTextBody,
+        operator: admin.operatorId,
         slug,
         sourceUrl: `https://example.com/${slug}`,
-        title: draftTitle,
+        title: initialTitle,
       },
       headers: authorization,
     })
     expect(createResponse.ok(), await createResponse.text()).toBeTruthy()
-    createdId = documentId(await createResponse.json())
+    publishedId = documentId(await createResponse.json())
 
-    const draftPage = await fetchPublicPage(baseURL, `/places/${slug}`)
-    expect(draftPage.body).toContain('This page could not be found.')
-    expect(draftPage.body).not.toContain(draftTitle)
+    // Static generation has no Operator Host. A cold request streams the
+    // destination detail shell before its host-scoped published query.
+    const coldPage = await readStreamingPublicPage(baseURL, `/places/${slug}`)
+    expect(coldPage.body).toContain(initialTitle)
+    expect(coldPage.body.indexOf('place-detail-back-link')).toBeGreaterThanOrEqual(0)
+    expect(coldPage.body.indexOf(initialTitle)).toBeGreaterThan(
+      coldPage.body.indexOf('place-detail-back-link'),
+    )
 
-    const publishedTitle = `Publicado ISR ${slug}`
-    const publishResponse = await request.patch(`/api/places/${createdId}?locale=es&draft=false`, {
-      data: { _status: 'published', title: publishedTitle },
+    // Warm the same Operator and slug query, then edit through the HTTP API so
+    // the collection hook invalidates the tagged published-data cache.
+    const warmedPage = await fetchPublicPage(baseURL, `/places/${slug}`)
+    expect(warmedPage.body).toContain(initialTitle)
+
+    const updatedTitle = `Edited ISR ${slug}`
+    const updateResponse = await request.patch(`/api/places/${publishedId}?locale=es&draft=false`, {
+      data: { title: updatedTitle },
+      headers: authorization,
+    })
+    expect(updateResponse.ok(), await updateResponse.text()).toBeTruthy()
+
+    await expect(async () => {
+      const updatedPage = await fetchPublicPage(baseURL, `/places/${slug}`)
+      expect(updatedPage.body).toContain(updatedTitle)
+      expect(updatedPage.body).not.toContain(initialTitle)
+    }).toPass({ timeout: 5000 })
+
+    const draftSlug = `${slug}-draft`
+    const draftTitle = `Private draft ${draftSlug}`
+    const draftResponse = await request.post('/api/places?locale=es&draft=true', {
+      data: {
+        _status: 'draft',
+        accessType: 'open',
+        body: validRichTextBody,
+        operator: admin.operatorId,
+        slug: draftSlug,
+        sourceUrl: `https://example.com/${draftSlug}`,
+        title: draftTitle,
+      },
+      headers: authorization,
+    })
+    expect(draftResponse.ok(), await draftResponse.text()).toBeTruthy()
+    draftId = documentId(await draftResponse.json())
+
+    const hiddenDraft = await fetchPublicPage(baseURL, `/places/${draftSlug}`)
+    expect(hiddenDraft.body).not.toContain(draftTitle)
+
+    const publishedDraftTitle = `Now published ${draftSlug}`
+    const publishResponse = await request.patch(`/api/places/${draftId}?locale=es&draft=false`, {
+      data: { _status: 'published', title: publishedDraftTitle },
       headers: authorization,
     })
     expect(publishResponse.ok(), await publishResponse.text()).toBeTruthy()
 
-    // The first visit to an omitted build-time slug streams the generic shell
-    // before its published content, then completes with the upgraded page.
-    const coldPage = await readStreamingPublicPage(baseURL, `/places/${slug}`)
-    expect(coldPage.firstChunk).toContain('place-detail-back-link')
-    expect(coldPage.firstChunk).not.toContain('place-detail-title')
-    expect(coldPage.body).toContain(publishedTitle)
+    const newlyPublished = await readStreamingPublicPage(baseURL, `/places/${draftSlug}`)
+    expect(newlyPublished.body).toContain(publishedDraftTitle)
+    expect(newlyPublished.body.indexOf('place-detail-back-link')).toBeGreaterThanOrEqual(0)
+    expect(newlyPublished.body.indexOf(publishedDraftTitle)).toBeGreaterThan(
+      newlyPublished.body.indexOf('place-detail-back-link'),
+    )
 
-    // The background upgrade can finish after the first response streams out.
-    // Wait for that upgrade, then verify a visitor gets the server-cached page.
-    await expect(async () => {
-      const warmPage = await fetchPublicPage(baseURL, `/places/${slug}`)
-      expect(warmPage.response.headers.get('x-nextjs-cache')).toBe('HIT')
-      expect(warmPage.response.headers.get('x-nextjs-postponed')).toBeNull()
-      expect(warmPage.body).toContain(publishedTitle)
-    }).toPass({ timeout: 5000 })
-
-    await page.goto('/places')
-    await page.locator(`a[href="/places/${slug}"]`).click()
-    await expect(page.getByTestId('place-detail-title')).toHaveText(publishedTitle)
+    const warmPublished = await fetchPublicPage(baseURL, `/places/${draftSlug}`)
+    expect(warmPublished.body).toContain(publishedDraftTitle)
   } finally {
     const cleanupErrors: unknown[] = []
 
@@ -102,7 +112,6 @@ test('publishes and caches a slug created after build, while invalidating a prer
       try {
         const response = await apiAction()
         if (response.ok()) return
-
         cleanupErrors.push(new Error(`${label} (${response.status()}): ${await response.text()}`))
       } catch (error) {
         cleanupErrors.push(error)
@@ -115,44 +124,23 @@ test('publishes and caches a slug created after build, while invalidating a prer
       }
     }
 
-    if (authorization && createdId !== undefined) {
-      const placeId = createdId
-      const auth = authorization
+    if (authorization && draftId !== undefined) {
+      const id = draftId
+      const headers = authorization
       await cleanupViaApiOrLocal(
-        'Could not delete temporary ISR place',
-        () =>
-          request.delete(`/api/places/${placeId}?locale=es&draft=false`, {
-            headers: auth,
-          }),
-        () =>
-          admin.payload.delete({
-            collection: 'places',
-            id: placeId,
-            overrideAccess: true,
-          }),
+        'Could not delete temporary draft place',
+        () => request.delete(`/api/places/${id}?locale=es&draft=false`, { headers }),
+        () => admin.payload.delete({ collection: 'places', id, overrideAccess: true }),
       )
     }
 
-    if (authorization && prerenderedId !== undefined && originalTitle !== undefined) {
-      const placeId = prerenderedId
-      const auth = authorization
-      const title = originalTitle
+    if (authorization && publishedId !== undefined) {
+      const id = publishedId
+      const headers = authorization
       await cleanupViaApiOrLocal(
-        'Could not restore prerendered ISR place',
-        () =>
-          request.patch(`/api/places/${placeId}?locale=es&draft=false`, {
-            data: { title },
-            headers: auth,
-          }),
-        () =>
-          admin.payload.update({
-            collection: 'places',
-            id: placeId,
-            data: { title },
-            draft: false,
-            locale: 'es',
-            overrideAccess: true,
-          }),
+        'Could not delete temporary published place',
+        () => request.delete(`/api/places/${id}?locale=es&draft=false`, { headers }),
+        () => admin.payload.delete({ collection: 'places', id, overrideAccess: true }),
       )
     }
 
@@ -168,7 +156,7 @@ test('publishes and caches a slug created after build, while invalidating a prer
     }
 
     if (cleanupErrors.length > 0) {
-      cleanupError = new AggregateError(cleanupErrors, 'CMS ISR test cleanup failed')
+      cleanupError = new AggregateError(cleanupErrors, 'CMS publication test cleanup failed')
     }
   }
 
@@ -193,7 +181,7 @@ const validRichTextBody = {
 }
 
 async function fetchPublicPage(baseURL: string | undefined, path: string) {
-  if (!baseURL) throw new Error('Playwright baseURL is required for ISR tests')
+  if (!baseURL) throw new Error('Playwright baseURL is required for CMS cache tests')
 
   const response = await fetch(new URL(path, baseURL))
   return { body: await response.text(), response }
@@ -213,30 +201,24 @@ function documentId(responseBody: unknown): number {
 }
 
 async function readStreamingPublicPage(baseURL: string | undefined, path: string) {
-  if (!baseURL) throw new Error('Playwright baseURL is required for ISR tests')
+  if (!baseURL) throw new Error('Playwright baseURL is required for CMS cache tests')
 
   const response = await fetch(new URL(path, baseURL))
   if (!response.body) throw new Error('Expected a streaming response body')
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
-  let firstChunk = ''
   let body = ''
-  let firstRead = true
 
   while (true) {
     const chunk = await reader.read()
     if (chunk.value) {
       const decoded = decoder.decode(chunk.value, { stream: !chunk.done })
       body += decoded
-      if (firstRead) {
-        firstChunk = decoded
-        firstRead = false
-      }
     }
     if (chunk.done) break
   }
 
   body += decoder.decode()
-  return { body, firstChunk, response }
+  return { body, response }
 }

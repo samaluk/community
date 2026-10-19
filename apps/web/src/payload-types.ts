@@ -68,11 +68,14 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    operators: Operator;
     media: Media;
     memberships: Membership;
     places: Place;
     articles: Article;
     products: Product;
+    'site-settings': SiteSetting;
+    'home-page': HomePage;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -81,11 +84,14 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    operators: OperatorsSelect<false> | OperatorsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     places: PlacesSelect<false> | PlacesSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'home-page': HomePageSelect<false> | HomePageSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -95,14 +101,8 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('es' | 'en') | ('es' | 'en')[];
-  globals: {
-    'site-settings': SiteSetting;
-    'home-page': HomePage;
-  };
-  globalsSelect: {
-    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
-    'home-page': HomePageSelect<false> | HomePageSelect<true>;
-  };
+  globals: {};
+  globalsSelect: {};
   locale: 'es' | 'en';
   widgets: {
     collections: CollectionsWidget;
@@ -137,7 +137,17 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
-  role: 'admin' | 'editor' | 'validation-manager';
+  /**
+   * Grants access to every operator and its administration.
+   */
+  platformAdmin?: boolean | null;
+  tenants?:
+    | {
+        operator: number | Operator;
+        role: 'admin' | 'editor' | 'validation-manager';
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -160,10 +170,23 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "operators".
+ */
+export interface Operator {
+  id: number;
+  name: string;
+  domain: string;
+  status: 'active' | 'suspended';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  operator: number | Operator;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -183,6 +206,7 @@ export interface Media {
  */
 export interface Membership {
   id: number;
+  operator: number | Operator;
   /**
    * Staff entry field. Payload stores a normalized identifier and lookup hash for checks.
    */
@@ -203,6 +227,7 @@ export interface Membership {
  */
 export interface Place {
   id: number;
+  operator: number | Operator;
   title: string;
   slug: string;
   summary?: string | null;
@@ -242,6 +267,7 @@ export interface Place {
  */
 export interface Article {
   id: number;
+  operator: number | Operator;
   title: string;
   slug: string;
   body: {
@@ -274,6 +300,7 @@ export interface Article {
  */
 export interface Product {
   id: number;
+  operator: number | Operator;
   title: string;
   slug: string;
   body: {
@@ -296,6 +323,36 @@ export interface Product {
   imageUrl?: string | null;
   sourceUrl: string;
   sourceUpdatedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  operator: number | Operator;
+  brandName: string;
+  siteDescription?: string | null;
+  defaultLocale?: string | null;
+  lang?: string | null;
+  instagramUrl?: string | null;
+  whatsappUrl?: string | null;
+  memberIdentifierType?: ('generic' | 'cl_rut') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-page".
+ */
+export interface HomePage {
+  id: number;
+  operator: number | Operator;
+  heroVideo: number | Media;
+  heroVideoAlt: string;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -329,6 +386,10 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'operators';
+        value: number | Operator;
+      } | null)
+    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -347,6 +408,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'site-settings';
+        value: number | SiteSetting;
+      } | null)
+    | ({
+        relationTo: 'home-page';
+        value: number | HomePage;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -395,7 +464,14 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  role?: T;
+  platformAdmin?: T;
+  tenants?:
+    | T
+    | {
+        operator?: T;
+        role?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -416,9 +492,21 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "operators_select".
+ */
+export interface OperatorsSelect<T extends boolean = true> {
+  name?: T;
+  domain?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  operator?: T;
   alt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -437,6 +525,7 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "memberships_select".
  */
 export interface MembershipsSelect<T extends boolean = true> {
+  operator?: T;
   identifier?: T;
   normalizedIdentifier?: T;
   lookupHash?: T;
@@ -450,6 +539,7 @@ export interface MembershipsSelect<T extends boolean = true> {
  * via the `definition` "places_select".
  */
 export interface PlacesSelect<T extends boolean = true> {
+  operator?: T;
   title?: T;
   slug?: T;
   summary?: T;
@@ -470,6 +560,7 @@ export interface PlacesSelect<T extends boolean = true> {
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
+  operator?: T;
   title?: T;
   slug?: T;
   body?: T;
@@ -487,6 +578,7 @@ export interface ArticlesSelect<T extends boolean = true> {
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
+  operator?: T;
   title?: T;
   slug?: T;
   body?: T;
@@ -495,6 +587,34 @@ export interface ProductsSelect<T extends boolean = true> {
   imageUrl?: T;
   sourceUrl?: T;
   sourceUpdatedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  operator?: T;
+  brandName?: T;
+  siteDescription?: T;
+  defaultLocale?: T;
+  lang?: T;
+  instagramUrl?: T;
+  whatsappUrl?: T;
+  memberIdentifierType?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "home-page_select".
+ */
+export interface HomePageSelect<T extends boolean = true> {
+  operator?: T;
+  heroVideo?: T;
+  heroVideoAlt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -538,62 +658,6 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings".
- */
-export interface SiteSetting {
-  id: number;
-  brandName: string;
-  siteDescription?: string | null;
-  defaultLocale?: string | null;
-  lang?: string | null;
-  instagramUrl?: string | null;
-  whatsappUrl?: string | null;
-  memberIdentifierType?: ('generic' | 'cl_rut') | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "home-page".
- */
-export interface HomePage {
-  id: number;
-  heroVideo: number | Media;
-  heroVideoAlt: string;
-  _status?: ('draft' | 'published') | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "site-settings_select".
- */
-export interface SiteSettingsSelect<T extends boolean = true> {
-  brandName?: T;
-  siteDescription?: T;
-  defaultLocale?: T;
-  lang?: T;
-  instagramUrl?: T;
-  whatsappUrl?: T;
-  memberIdentifierType?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "home-page_select".
- */
-export interface HomePageSelect<T extends boolean = true> {
-  heroVideo?: T;
-  heroVideoAlt?: T;
-  _status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

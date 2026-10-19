@@ -1,31 +1,26 @@
 import { expect, test } from '@playwright/test'
 
+import { observePrefetchedShell } from './helpers/prefetchedShell'
+
 test('a prefetched article remains usable offline and after reconnecting', async ({
   context,
   page,
 }) => {
-  const shellPrefetch = page.waitForResponse(async (response) => {
-    const request = response.request()
-    if (
-      !request.headers()['next-router-prefetch'] ||
-      !new URL(response.url()).pathname.startsWith('/articles/') ||
-      !response.ok()
-    ) {
-      return false
-    }
-    return (await response.text()).includes('article-detail-back-link')
-  })
-  await page.goto('/articles')
-  const card = page.locator('[data-slot="card"]').filter({ hasText: 'Articulo Fixture Uno' })
-  const link = card.getByRole('link', { name: 'Read article' })
-  await expect(link).toBeVisible()
-  await link.scrollIntoViewIfNeeded()
-  await link.hover()
-  // Verify the actual shell arrived, rather than assuming an idle network means
-  // the visible Link prefetched more than the route tree.
-  await shellPrefetch
+  const articlePath = '/articles/articulo-fixture-1'
+  const shell = await observePrefetchedShell(page, articlePath)
 
   try {
+    await page.goto('/articles')
+    const card = page.locator('[data-slot="card"]').filter({ hasText: 'Articulo Fixture Uno' })
+    const link = card.getByRole('link', { name: 'Read article' })
+    await expect(link).toBeVisible()
+    await link.scrollIntoViewIfNeeded()
+    await link.hover()
+    // A route-tree prefetch has no shell data. Wait for the actual article segment,
+    // then let Next process the streamed response and settle its module requests.
+    await shell.waitUntilReady('article-detail-back-link')
+    await page.waitForLoadState('networkidle')
+
     await context.setOffline(true)
     await expect(page.getByRole('status').filter({ hasText: "You're offline" })).toBeVisible()
 
@@ -36,6 +31,7 @@ test('a prefetched article remains usable offline and after reconnecting', async
     await expect(page.getByText("You're offline", { exact: false })).toHaveCount(0)
   } finally {
     await context.setOffline(false)
+    await shell.close()
   }
 })
 
@@ -72,14 +68,21 @@ test('a pending location Server Action saves once the connection returns', async
       (entry) => entry.name === 'community.places.userGeo',
     )
     expect(cookie).toBeDefined()
-    expect(JSON.parse(decodeURIComponent(cookie!.value))).toMatchObject({
-      latitude: -33.45,
-      longitude: -70.66,
+    if (!cookie) throw new Error('Expected the location action to set the Operator geo cookie')
+    const storedGeo: unknown = JSON.parse(decodeURIComponent(cookie.value))
+    expect(storedGeo).toMatchObject({
+      operatorId: expect.any(Number),
+      geo: {
+        latitude: -33.45,
+        longitude: -70.66,
+        maxKm: 50,
+      },
     })
     await expect(page.getByText("You're offline", { exact: false })).toHaveCount(0)
 
     await page.reload()
     await expect(page.getByRole('button', { name: 'Actualizar ubicación' })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Usar mi ubicación' })).toHaveCount(0)
   } finally {
     await context.setOffline(false)
   }

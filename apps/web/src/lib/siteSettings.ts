@@ -1,13 +1,16 @@
 import config from '@payload-config'
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 import { draftMode } from 'next/headers'
 import { getPayload } from 'payload'
 
-import { getCmsQueryOptions } from '@/lib/cmsQuery'
+import { getCmsQueryOptions, getPublishedCmsQueryOptions } from '@/lib/cmsQuery'
+import { assertActiveOperator, getRequestOperator } from '@/lib/operator'
 import { isPayloadUnavailableError } from '@/lib/payloadUnavailableError'
 import type { SiteSetting } from '@/payload-types'
 
-export const DEFAULT_SITE_SETTINGS: SiteSetting = {
+export type PublicSiteSettings = Omit<SiteSetting, 'operator'>
+
+export const DEFAULT_SITE_SETTINGS: PublicSiteSettings = {
   id: 0,
   brandName: 'Community',
   siteDescription: 'A platform for community connection and shared knowledge.',
@@ -20,19 +23,28 @@ export const DEFAULT_SITE_SETTINGS: SiteSetting = {
 
 async function fetchSiteSettings(options: {
   draft: boolean
+  operatorId: number
+  operatorDomain: string
   overrideAccess: boolean
-}): Promise<SiteSetting> {
+}): Promise<PublicSiteSettings> {
   try {
     const payload = await getPayload({ config })
-    const settings = await payload.findGlobal({
-      slug: 'site-settings',
+    const { operatorId, operatorDomain, ...queryOptions } = options
+    const publicQuery = queryOptions.draft
+      ? {}
+      : await getPublishedCmsQueryOptions(payload, operatorDomain)
+    const settings = await payload.find({
+      collection: 'site-settings',
       depth: 1,
-      ...options,
+      limit: 1,
+      ...queryOptions,
+      ...publicQuery,
+      where: { operator: { equals: operatorId } },
     })
 
     return {
       ...DEFAULT_SITE_SETTINGS,
-      ...settings,
+      ...settings.docs[0],
     }
   } catch (error) {
     if (!isPayloadUnavailableError(error)) {
@@ -43,24 +55,37 @@ async function fetchSiteSettings(options: {
   }
 }
 
-async function getPublishedSiteSettings(): Promise<SiteSetting> {
+async function getPublishedSiteSettings(
+  operatorId: number,
+  operatorDomain: string,
+): Promise<PublicSiteSettings> {
   'use cache'
   cacheLife('publicContent')
+  cacheTag(`site-settings:${operatorId}`)
 
-  return fetchSiteSettings({ draft: false, overrideAccess: false })
+  return fetchSiteSettings({ draft: false, operatorId, operatorDomain, overrideAccess: false })
 }
 
-export async function getSiteSettings(): Promise<SiteSetting> {
+export async function getSiteSettings(): Promise<PublicSiteSettings> {
+  const operator = assertActiveOperator(await getRequestOperator())
   try {
     const { isEnabled: draft } = await draftMode()
     if (!draft) {
-      return await getPublishedSiteSettings()
+      return await getPublishedSiteSettings(operator.id, operator.domain)
     }
 
     const cmsQuery = await getCmsQueryOptions()
 
-    return await fetchSiteSettings(cmsQuery)
+    if (!cmsQuery.draft) {
+      return await getPublishedSiteSettings(operator.id, operator.domain)
+    }
+
+    return await fetchSiteSettings({
+      ...cmsQuery,
+      operatorId: operator.id,
+      operatorDomain: operator.domain,
+    })
   } catch {
-    return await getPublishedSiteSettings()
+    return await getPublishedSiteSettings(operator.id, operator.domain)
   }
 }

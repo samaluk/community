@@ -8,14 +8,12 @@ const publishing = getPublicContentPublishing('products')
 
 export const Products: CollectionConfig = {
   slug: 'products',
+  ...publishing,
   admin: {
     ...publishing.admin,
     defaultColumns: ['title', 'priceCLP', 'stockStatus', 'updatedAt'],
     useAsTitle: 'title',
   },
-  access: publishing.access,
-  hooks: publishing.hooks,
-  versions: publishing.versions,
   fields: [
     localizedTitleField(),
     uniqueSlugField(),

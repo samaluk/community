@@ -3,5 +3,16 @@
 import config from '@payload-config'
 import '@payloadcms/next/css'
 import { GRAPHQL_PLAYGROUND_GET } from '@payloadcms/next/routes'
+import { getOperatorForHost, OperatorResolutionError } from '@/lib/operator'
 
-export const GET = GRAPHQL_PLAYGROUND_GET(config)
+const playgroundGet = GRAPHQL_PLAYGROUND_GET(config)
+export const GET = async (request: Request) => {
+  try {
+    await getOperatorForHost(request.headers.get('host'))
+  } catch (error) {
+    if (error instanceof OperatorResolutionError) return new Response('Not found', { status: 404 })
+    throw error
+  }
+
+  return playgroundGet(request)
+}

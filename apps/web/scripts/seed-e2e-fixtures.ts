@@ -9,6 +9,7 @@
 import { getPayload, type Payload, type RequiredDataFromCollectionSlug } from 'payload'
 
 import { loadTestEnv } from './loadScriptEnv.js'
+import { getTestOperator } from './getTestOperator.js'
 
 loadTestEnv()
 await import('../src/env.js')
@@ -48,7 +49,10 @@ type FixtureCollection = (typeof fixtureCollections)[number]
  * state fixtures carry (its root demands an indent/alignment `format` the
  * real serialized state does not emit).
  */
-type FixtureDoc<C extends FixtureCollection> = Omit<RequiredDataFromCollectionSlug<C>, 'body'> & {
+type FixtureDoc<C extends FixtureCollection> = Omit<
+  RequiredDataFromCollectionSlug<C>,
+  'body' | 'operator'
+> & {
   body: typeof richTextBody
   slug: string
 }
@@ -115,10 +119,22 @@ async function upsertFixtures() {
   const payload = await getPayload({ config })
 
   try {
-    for (const collection of fixtureCollections) {
-      for (const data of fixtures[collection]) {
-        await upsertFixtureDoc(payload, collection, data)
-      }
+    const operator = await getTestOperator(payload)
+    // These six fixture slugs are independent. Await every write before
+    // destroying the adapter, including when one fixture fails.
+    const results = await Promise.allSettled(
+      fixtureCollections.flatMap((collection) =>
+        fixtures[collection].map((data) =>
+          upsertFixtureDoc(payload, collection, data, operator.id),
+        ),
+      ),
+    )
+    const failures = results.filter((result) => result.status === 'rejected')
+    if (failures.length) {
+      throw new AggregateError(
+        failures.map(({ reason }): unknown => reason),
+        'Could not seed all E2E fixtures',
+      )
     }
   } finally {
     await payload.destroy()
@@ -129,6 +145,7 @@ async function upsertFixtureDoc(
   payload: Payload,
   collection: FixtureCollection,
   data: FixtureDoc<FixtureCollection>,
+  operatorId: number,
 ) {
   const slug = data.slug
   const existing = await payload.find({
@@ -139,7 +156,7 @@ async function upsertFixtureDoc(
     locale: 'es',
     overrideAccess: true,
     where: {
-      slug: { equals: slug },
+      and: [{ operator: { equals: operatorId } }, { slug: { equals: slug } }],
     },
   })
 
@@ -152,6 +169,7 @@ async function upsertFixtureDoc(
     ...data,
     body: data.body as unknown as RequiredDataFromCollectionSlug<FixtureCollection>['body'],
     _status: 'published',
+    operator: operatorId,
   } as RequiredDataFromCollectionSlug<FixtureCollection>
   // oxlint-enable no-unsafe-type-assertion, typescript/consistent-type-assertions
 

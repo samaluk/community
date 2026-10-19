@@ -8,32 +8,81 @@ vi.mock('next/cache', () => ({
   cacheLife: vi.fn(),
   cacheTag: vi.fn(),
 }))
-vi.mock('next/headers', () => ({ draftMode: vi.fn() }))
-vi.mock('payload', () => ({ getPayload: vi.fn() }))
+vi.mock('next/headers', () => ({ draftMode: vi.fn(), headers: vi.fn() }))
+vi.mock('payload', () => ({
+  createLocalReq: vi.fn(async ({ req }) => req),
+  getPayload: vi.fn(),
+}))
 
 beforeEach(async () => {
   vi.clearAllMocks()
 
-  const { draftMode } = await import('next/headers')
+  const { draftMode, headers } = await import('next/headers')
   vi.mocked(draftMode).mockResolvedValue({
     disable: vi.fn(),
     enable: vi.fn(),
     isEnabled: false,
   })
+  vi.mocked(headers).mockResolvedValue(new Headers({ host: 'localhost' }))
 })
 
-it('propagates a published CMS failure so the detail boundary can retry it', async () => {
+async function mockOperatorThenPayloadQuery(failure: unknown) {
   const { getPayload } = await import('payload')
+  vi.mocked(getPayload)
+    .mockResolvedValueOnce({
+      find: vi.fn().mockResolvedValue({
+        docs: [{ id: 1, name: 'Test Operator', domain: 'localhost', status: 'active' }],
+      }),
+    } as never)
+    .mockRejectedValueOnce(failure)
+}
+
+it('propagates a published CMS failure so the detail boundary can retry it', async () => {
   const failure = { code: 'ECONNREFUSED' }
-  vi.mocked(getPayload).mockRejectedValue(failure)
+  await mockOperatorThenPayloadQuery(failure)
 
   await expect(getPayloadDocBySlug('articles', 'retryable-article')).rejects.toBe(failure)
 })
 
-it('keeps metadata renderable when the detail CMS lookup fails', async () => {
+it('limits published slug lookups to the active Operator and published status', async () => {
+  const operator = {
+    id: 101,
+    name: 'Operator A',
+    domain: 'localhost',
+    status: 'active' as const,
+  }
+  const operatorFind = vi.fn().mockResolvedValue({ docs: [operator] })
+  const contentFind = vi.fn().mockResolvedValue({
+    docs: [{ id: 17, operator: operator.id, slug: 'public-article', _status: 'published' }],
+  })
   const { getPayload } = await import('payload')
+  vi.mocked(getPayload)
+    .mockResolvedValueOnce({ find: operatorFind } as never)
+    .mockResolvedValueOnce({ find: contentFind } as never)
+
+  const result = await getPayloadDocBySlug('articles', 'public-article')
+
+  expect(result).toMatchObject({ slug: 'public-article', _status: 'published' })
+  expect(contentFind).toHaveBeenCalledWith(
+    expect.objectContaining({
+      collection: 'articles',
+      draft: false,
+      overrideAccess: false,
+      req: { headers: new Headers({ host: operator.domain }) },
+      where: {
+        and: [
+          { operator: { equals: operator.id } },
+          { _status: { equals: 'published' } },
+          { slug: { equals: 'public-article' } },
+        ],
+      },
+    }),
+  )
+})
+
+it('keeps metadata renderable when the detail CMS lookup fails', async () => {
   const failure = { code: 'ECONNREFUSED' }
-  vi.mocked(getPayload).mockRejectedValue(failure)
+  await mockOperatorThenPayloadQuery(failure)
 
   const metadata = await payloadDocMetadata(
     'articles',
@@ -46,7 +95,6 @@ it('keeps metadata renderable when the detail CMS lookup fails', async () => {
 })
 
 it('lets redirect control-flow signals escape metadata error handling', async () => {
-  const { getPayload } = await import('payload')
   let redirectSignal: unknown
 
   try {
@@ -55,7 +103,7 @@ it('lets redirect control-flow signals escape metadata error handling', async ()
     redirectSignal = error
   }
 
-  vi.mocked(getPayload).mockRejectedValue(redirectSignal)
+  await mockOperatorThenPayloadQuery(redirectSignal)
 
   await expect(
     payloadDocMetadata(
@@ -68,7 +116,6 @@ it('lets redirect control-flow signals escape metadata error handling', async ()
 })
 
 it('lets not-found control-flow signals escape metadata error handling', async () => {
-  const { getPayload } = await import('payload')
   let notFoundSignal: unknown
 
   try {
@@ -77,7 +124,7 @@ it('lets not-found control-flow signals escape metadata error handling', async (
     notFoundSignal = error
   }
 
-  vi.mocked(getPayload).mockRejectedValue(notFoundSignal)
+  await mockOperatorThenPayloadQuery(notFoundSignal)
 
   await expect(
     payloadDocMetadata(

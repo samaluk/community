@@ -41,9 +41,11 @@ reuse the same already-seeded database. Leave `E2E_SEED_FIXTURES` unset when
 running tests after the build. That flag remains available as an explicit opt-in
 to the standalone Playwright fixture setup.
 
-A successful build includes the two fixture slugs for each of `places`,
-`articles`, and `products`. The suite visits them anonymously. Draft preview and
-publishing tests use separate temporary staff users and documents.
+A successful build includes generic shells for `places`, `articles`, and
+`products`. The registered local Operator's fixture slugs resolve at request
+time; the build cannot enumerate content without a hostname. The suite visits
+them anonymously. Draft preview and publishing tests use separate temporary
+staff users and documents.
 
 ## What the checks prove
 
@@ -54,10 +56,16 @@ publishing tests use separate temporary staff users and documents.
   reject successful prerendering.
 - `offline.e2e.spec.ts` disconnects the browser after a link's prefetch. It checks
   the shell while the browser cannot reach the server, then reconnects and checks
-  the content. A separate journey checks that a pending location Server Action
-  saves after reconnection and survives a reload.
+  the content. Listing detail links opt into per-link prefetching to resolve the
+  host-dependent shell; a routing-tree prefetch alone is insufficient. A separate
+  journey checks that a pending location Server Action saves after reconnection
+  and survives a reload.
 - `cms-isr.e2e.spec.ts` checks publishing and draft isolation for existing and
-  newly published slugs against the running Next.js server.
+  newly published slugs against the running Next.js server, including
+  invalidation of warmed Operator data caches.
+- `operator-isolation.e2e.spec.ts` alternates two configured hosts with the same
+  slug and member identifier, checking content, chrome, language, drafts, and
+  membership status. Unknown and suspended hosts must reveal no Operator data.
 - `error-boundary.e2e.spec.ts` checks recovery through the public content retry
   boundary and preserves the missing-document behavior.
 

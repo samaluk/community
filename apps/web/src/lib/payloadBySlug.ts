@@ -8,11 +8,12 @@ import type { Metadata } from 'next'
 import { cache } from 'react'
 
 import { getCmsQueryOptions, getPublishedCmsQueryOptions } from '@/lib/cmsQuery'
+import { assertActiveOperator, getRequestOperator } from '@/lib/operator'
 import { isPayloadUnavailableError } from '@/lib/payloadUnavailableError'
 import {
   getPublicContentCollectionCacheTag,
   getPublicContentDocCacheTag,
-  getPublicContentStaticParams,
+  emptyPublicContentSlug,
   type PublicContentCollection,
 } from '@/lib/publicContentCache'
 import type { Config } from '@/payload-types'
@@ -28,62 +29,36 @@ import type { Config } from '@/payload-types'
 export const getPayloadDocBySlug = cache(async function getPayloadDocBySlug<
   TSlug extends CollectionSlug<Config>,
 >(collection: TSlug, slug: string): Promise<DataFromCollectionSlug<TSlug> | null> {
-  const { isEnabled: draft } = await draftMode()
+  const operator = assertActiveOperator(await getRequestOperator())
+  const [{ isEnabled: draft }, cmsQuery] = await Promise.all([draftMode(), getCmsQueryOptions()])
 
-  return draft
-    ? await getDraftPayloadDocBySlug(collection, slug)
-    : await getPublishedPayloadDocBySlug(collection, slug)
+  return draft && cmsQuery.draft
+    ? await getDraftPayloadDocBySlug(collection, slug, operator.id)
+    : await getPublishedPayloadDocBySlug(collection, slug, operator.id, operator.domain)
 })
 
 /** Draft-mode dispatch for listing routes (see {@link getPayloadDocBySlug}). */
 export const getPayloadDocs = cache(async function getPayloadDocs<
   TSlug extends CollectionSlug<Config>,
 >(collection: TSlug): Promise<DataFromCollectionSlug<TSlug>[]> {
-  const { isEnabled: draft } = await draftMode()
+  const operator = assertActiveOperator(await getRequestOperator())
+  const [{ isEnabled: draft }, cmsQuery] = await Promise.all([draftMode(), getCmsQueryOptions()])
 
-  return draft ? await getDraftPayloadDocs(collection) : await getPublishedPayloadDocs(collection)
+  return draft && cmsQuery.draft
+    ? await getDraftPayloadDocs(collection, operator.id)
+    : await getPublishedPayloadDocs(collection, operator.id, operator.domain)
 })
 
 /**
- * Slugs to prerender for public detail routes. This intentionally uses the
- * published query directly: `generateStaticParams` runs at build time, where
- * draft mode has no request context to inspect.
- */
-async function getPublishedPayloadDocSlugs(collection: PublicContentCollection): Promise<string[]> {
-  'use cache'
-  cacheLife('publicContent')
-  cacheTag(getPublicContentCollectionCacheTag(collection))
-
-  const payload = await getPayload({ config })
-  const docs = await payload.find({
-    collection,
-    depth: 0,
-    limit: 20,
-    locale: 'es',
-    sort: 'title',
-    select: {
-      slug: true,
-    },
-    ...getPublishedCmsQueryOptions(),
-  })
-
-  return docs.docs.flatMap((doc) =>
-    typeof doc.slug === 'string' && doc.slug.length > 0 ? [doc.slug] : [],
-  )
-}
-
-/**
  * Build params for public detail routes. Next requires at least one param
- * with Cache Components enabled, even when a collection has no published
- * documents. The reserved value resolves through the normal not-found path;
- * CMS errors still throw from getPublishedPayloadDocSlugs above.
+ * with Cache Components enabled. Static generation has no request Host, so
+ * it cannot enumerate one operator's slugs safely. The reserved value builds
+ * the static shell and resolves through the normal not-found path.
  */
 async function getPublishedPayloadStaticParams(
-  collection: PublicContentCollection,
+  _collection: PublicContentCollection,
 ): Promise<Array<{ slug: string }>> {
-  const slugs = await getPublishedPayloadDocSlugs(collection)
-
-  return getPublicContentStaticParams(slugs)
+  return [{ slug: emptyPublicContentSlug }]
 }
 
 /**
@@ -130,6 +105,7 @@ export function payloadDocRoute(collection: PublicContentCollection, fallbackTit
 async function getDraftPayloadDocBySlug<TSlug extends CollectionSlug<Config>>(
   collection: TSlug,
   slug: string,
+  operatorId: number,
 ): Promise<DataFromCollectionSlug<TSlug> | null> {
   // Payload boot and CMS query options are independent, so race them.
   const [payload, cmsQuery] = await Promise.all([getPayload({ config }), getCmsQueryOptions()])
@@ -140,9 +116,7 @@ async function getDraftPayloadDocBySlug<TSlug extends CollectionSlug<Config>>(
     locale: 'es',
     ...cmsQuery,
     where: {
-      slug: {
-        equals: slug,
-      },
+      and: [{ operator: { equals: operatorId } }, { slug: { equals: slug } }],
     },
   })
 
@@ -152,23 +126,28 @@ async function getDraftPayloadDocBySlug<TSlug extends CollectionSlug<Config>>(
 async function getPublishedPayloadDocBySlug<TSlug extends CollectionSlug<Config>>(
   collection: TSlug,
   slug: string,
+  operatorId: number,
+  operatorDomain: string,
 ): Promise<DataFromCollectionSlug<TSlug> | null> {
   'use cache'
   cacheLife('publicContent')
-  cacheTag(getPublicContentDocCacheTag(collection, slug))
+  cacheTag(getPublicContentDocCacheTag(operatorId, collection, slug))
 
   try {
     const payload = await getPayload({ config })
+    const publicQuery = await getPublishedCmsQueryOptions(payload, operatorDomain)
     const docs = await payload.find({
       collection,
       depth: 1,
       limit: 1,
       locale: 'es',
-      ...getPublishedCmsQueryOptions(),
+      ...publicQuery,
       where: {
-        slug: {
-          equals: slug,
-        },
+        and: [
+          { operator: { equals: operatorId } },
+          { _status: { equals: 'published' } },
+          { slug: { equals: slug } },
+        ],
       },
     })
 
@@ -188,20 +167,26 @@ async function getPublishedPayloadDocBySlug<TSlug extends CollectionSlug<Config>
  */
 async function getPublishedPayloadDocs<TSlug extends CollectionSlug<Config>>(
   collection: TSlug,
+  operatorId: number,
+  operatorDomain: string,
 ): Promise<DataFromCollectionSlug<TSlug>[]> {
   'use cache'
   cacheLife('publicContent')
-  cacheTag(getPublicContentCollectionCacheTag(collection))
+  cacheTag(getPublicContentCollectionCacheTag(operatorId, collection))
 
   try {
     const payload = await getPayload({ config })
+    const publicQuery = await getPublishedCmsQueryOptions(payload, operatorDomain)
     const docs = await payload.find({
       collection,
       depth: 1,
       limit: 20,
       locale: 'es',
       sort: 'title',
-      ...getPublishedCmsQueryOptions(),
+      ...publicQuery,
+      where: {
+        and: [{ operator: { equals: operatorId } }, { _status: { equals: 'published' } }],
+      },
     })
 
     return docs.docs
@@ -217,6 +202,7 @@ async function getPublishedPayloadDocs<TSlug extends CollectionSlug<Config>>(
 /** Latest 20 docs of a collection including drafts, for draft-mode previews. */
 async function getDraftPayloadDocs<TSlug extends CollectionSlug<Config>>(
   collection: TSlug,
+  operatorId: number,
 ): Promise<DataFromCollectionSlug<TSlug>[]> {
   // Payload boot and CMS query options are independent, so race them.
   const [payload, cmsQuery] = await Promise.all([getPayload({ config }), getCmsQueryOptions()])
@@ -227,6 +213,9 @@ async function getDraftPayloadDocs<TSlug extends CollectionSlug<Config>>(
     locale: 'es',
     sort: 'title',
     ...cmsQuery,
+    where: {
+      operator: { equals: operatorId },
+    },
   })
 
   return docs.docs

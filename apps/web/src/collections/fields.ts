@@ -15,7 +15,6 @@ export const uniqueSlugField = (): TextField => ({
   type: 'text',
   index: true,
   required: true,
-  unique: true,
 })
 
 export const localizedRichBodyField = (): RichTextField => ({

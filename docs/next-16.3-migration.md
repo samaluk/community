@@ -25,6 +25,23 @@ On 2026-10-19 UTC, an isolated Preview running Next.js 16.4.2 passed #186's
 immutable-asset and mutable public-content freshness checks. The September and
 2026-10-18 observations below remain dated history; the Preview blocker is resolved.
 
+## Operator tenancy follow-up
+
+The original evidence below describes the single-Operator implementation from
+September. The subsequent [Operator isolation decision](adr/0006-operator-multi-tenancy.md)
+changes full-page prerendering: the same public path can now belong to different
+Operators depending on its hostname. Builds produce a generic loading shell
+and reserved detail parameter; Operator content and metadata resolve at request
+time. Published data remains cached by Operator ID and invalidated by
+Operator-scoped publishing tags. A warm data cache does not turn the whole
+host-dependent response into a shared fully prerendered page.
+
+The current browser checks therefore cover warm-data publishing invalidation,
+draft isolation, instant route shells, and alternating hosts with the same slug.
+The earlier top-20 build-slug and background full-page ISR observations remain
+historical evidence, rather than the current multi-Operator rendering contract.
+See the [operations guide](operator-tenancy.md) for migration and rollout limits.
+
 ## CMS rendering and recovery
 
 The three detail routes prerender up to 20 published Spanish-language slugs,

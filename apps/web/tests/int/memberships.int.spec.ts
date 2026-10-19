@@ -1,11 +1,12 @@
 import { getPayload, type Payload } from 'payload'
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { env } from '@/env'
 import config from '@/payload.config'
 import { checkMembership, findMembershipByLookupHash } from '@/lib/memberships'
 
 let payload: Payload
+let operatorId: number
 
 const testIdentifier = 'MEMBER-42'
 const testRut = '12.345.678-5'
@@ -15,6 +16,26 @@ describe('Memberships integration', () => {
   beforeAll(async () => {
     const payloadConfig = await config
     payload = await getPayload({ config: payloadConfig })
+
+    const operator = await payload.create({
+      collection: 'operators',
+      data: {
+        domain: `memberships-${Date.now()}.example.test`,
+        name: 'Membership integration test',
+        status: 'active',
+      },
+      overrideAccess: true,
+    })
+    operatorId = operator.id
+  })
+
+  afterAll(async () => {
+    await payload.delete({
+      collection: 'memberships',
+      overrideAccess: true,
+      where: { operator: { equals: operatorId } },
+    })
+    await payload.delete({ collection: 'operators', id: operatorId, overrideAccess: true })
   })
 
   beforeEach(async () => {
@@ -22,23 +43,28 @@ describe('Memberships integration', () => {
       collection: 'memberships',
       overrideAccess: true,
       where: {
-        or: [
+        and: [
+          { operator: { equals: operatorId } },
           {
-            identifier: {
-              equals: testIdentifier,
-            },
-          },
-          {
-            identifier: {
-              equals: cleanedRut,
-            },
+            or: [
+              {
+                identifier: {
+                  equals: testIdentifier,
+                },
+              },
+              {
+                identifier: {
+                  equals: cleanedRut,
+                },
+              },
+            ],
           },
         ],
       },
     })
   })
 
-  it('finds active memberships through the hashed lookup field', async () => {
+  it('finds active memberships through the hashed lookup field within its operator', async () => {
     const created = await payload.create({
       collection: 'memberships',
       data: {
@@ -46,6 +72,7 @@ describe('Memberships integration', () => {
         isActive: true,
         lookupHash: '',
         normalizedIdentifier: '',
+        operator: operatorId,
       },
       draft: false,
       overrideAccess: true,
@@ -55,7 +82,7 @@ describe('Memberships integration', () => {
     expect(created.lookupHash).toMatch(/^[a-f0-9]{64}$/)
 
     const result = await checkMembership(testIdentifier, {
-      findByLookupHash: (lookupHash) => findMembershipByLookupHash(payload, lookupHash),
+      findByLookupHash: (lookupHash) => findMembershipByLookupHash(payload, lookupHash, operatorId),
       hashSecret: env.PAYLOAD_SECRET,
     })
 
@@ -70,13 +97,14 @@ describe('Memberships integration', () => {
         isActive: false,
         lookupHash: '',
         normalizedIdentifier: '',
+        operator: operatorId,
       },
       draft: false,
       overrideAccess: true,
     })
 
     const result = await checkMembership(testIdentifier, {
-      findByLookupHash: (lookupHash) => findMembershipByLookupHash(payload, lookupHash),
+      findByLookupHash: (lookupHash) => findMembershipByLookupHash(payload, lookupHash, operatorId),
       hashSecret: env.PAYLOAD_SECRET,
     })
 
@@ -91,6 +119,7 @@ describe('Memberships integration', () => {
         isActive: true,
         lookupHash: '',
         normalizedIdentifier: '',
+        operator: operatorId,
       },
       draft: false,
       overrideAccess: true,
@@ -100,10 +129,10 @@ describe('Memberships integration', () => {
     expect(created.normalizedIdentifier).toBe(cleanedRut)
     expect(created.lookupHash).toMatch(/^[a-f0-9]{64}$/)
 
-    // Can be verified using formatted RUT, hyphen-only RUT, or raw digits
     for (const input of [testRut, '12345678-5', cleanedRut]) {
       const result = await checkMembership(input, {
-        findByLookupHash: (lookupHash) => findMembershipByLookupHash(payload, lookupHash),
+        findByLookupHash: (lookupHash) =>
+          findMembershipByLookupHash(payload, lookupHash, operatorId),
         hashSecret: env.PAYLOAD_SECRET,
       })
 

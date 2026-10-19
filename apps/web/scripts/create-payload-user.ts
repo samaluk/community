@@ -1,28 +1,14 @@
-import { getPayload } from 'payload'
-
-import type { StaffRole } from '../src/access/roles.js'
+import { getPayload, type Payload } from 'payload'
 
 import { loadEnvForScript } from './loadScriptEnv.js'
+import {
+  provisionStaffUser,
+  type StaffProvisioningPort,
+  type StaffUserData,
+} from './staffProvisioning.js'
 
 loadEnvForScript()
 await import('../src/env.js')
-
-const staffRolesByName: Record<string, StaffRole> = {
-  admin: 'admin',
-  editor: 'editor',
-  'validation-manager': 'validation-manager',
-}
-
-function parseStaffRole(value: string | undefined): StaffRole {
-  const role = value?.trim() || 'admin'
-  const parsed = staffRolesByName[role]
-
-  if (!parsed) {
-    throw new Error(`CMS_USER_ROLE must be one of: ${Object.keys(staffRolesByName).join(', ')}`)
-  }
-
-  return parsed
-}
 
 const getRequiredEnv = (name: string) => {
   const value = process.env[name]?.trim()
@@ -34,60 +20,74 @@ const getRequiredEnv = (name: string) => {
   return value
 }
 
-const main = async () => {
-  const email = getRequiredEnv('CMS_USER_EMAIL').toLowerCase()
-  const password = getRequiredEnv('CMS_USER_PASSWORD')
-  const role = parseStaffRole(process.env.CMS_USER_ROLE)
-  const updateExisting = process.env.CMS_USER_UPDATE_EXISTING === 'true'
-
-  const { default: config } = await import('@payload-config')
-  const payload = await getPayload({ config })
-
-  const existingUsers = await payload.find({
-    collection: 'users',
-    limit: 1,
-    where: {
-      email: {
-        equals: email,
-      },
+function payloadPort(payload: Payload): StaffProvisioningPort {
+  return {
+    async findUserByEmail(email) {
+      const { docs } = await payload.find({
+        collection: 'users',
+        depth: 0,
+        limit: 1,
+        overrideAccess: true,
+        where: { email: { equals: email } },
+      })
+      return docs[0] ?? null
     },
-  })
-
-  const existingUser = existingUsers.docs[0]
-
-  if (existingUser) {
-    if (!updateExisting) {
-      throw new Error(
-        `User ${email} already exists. Set CMS_USER_UPDATE_EXISTING=true to update its password and role.`,
-      )
-    }
-
-    await payload.update({
-      collection: 'users',
-      id: existingUser.id,
-      data: {
-        password,
-        role,
-      },
-    })
-
-    console.log(`Updated Payload user ${email} with role ${role}.`)
-    return
+    async assertOperatorExists(operatorId) {
+      await payload.findByID({
+        collection: 'operators',
+        id: operatorId,
+        depth: 0,
+        overrideAccess: true,
+      })
+    },
+    async createUser(data: StaffUserData) {
+      if (!data.email) throw new Error('CMS_USER_EMAIL is required')
+      await payload.create({
+        collection: 'users',
+        data: { ...data, email: data.email },
+        overrideAccess: true,
+      })
+    },
+    async updateUser(id, data: StaffUserData) {
+      await payload.update({
+        collection: 'users',
+        id,
+        data,
+        overrideAccess: true,
+      })
+    },
   }
-
-  await payload.create({
-    collection: 'users',
-    data: {
-      email,
-      password,
-      role,
-    },
-  })
-
-  console.log(`Created Payload user ${email} with role ${role}.`)
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exit(1)
-})
+async function provisionUser(payload: Payload) {
+  const email = getRequiredEnv('CMS_USER_EMAIL').toLowerCase()
+  const result = await provisionStaffUser(payloadPort(payload), {
+    email,
+    password: getRequiredEnv('CMS_USER_PASSWORD'),
+    operatorId: process.env.CMS_OPERATOR_ID,
+    role: process.env.CMS_USER_ROLE,
+    grantPlatformAdmin: process.env.CMS_PLATFORM_ADMIN === 'true',
+    updateExisting: process.env.CMS_USER_UPDATE_EXISTING === 'true',
+  })
+
+  console.log(`${result === 'updated' ? 'Updated' : 'Created'} Payload staff user ${email}.`)
+}
+
+const main = async () => {
+  const { default: config } = await import('@payload-config')
+  const payload = await getPayload({ config })
+  try {
+    await provisionUser(payload)
+  } finally {
+    await payload.destroy()
+  }
+}
+
+main()
+  // Payload can retain an adapter-owned handle after destroy; all writes and
+  // cleanup have completed when this short-lived provisioning command exits.
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exit(1)
+  })

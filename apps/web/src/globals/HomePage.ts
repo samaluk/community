@@ -1,38 +1,58 @@
-import type { GlobalConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
 
+import { ensureHomeVideoOperator } from '@/access/homeVideoOperator'
 import { publishedOrStaff } from '@/access/publishedOrStaff'
-import { isEditorOrAdmin } from '@/access/roles'
-import { buildPreviewUrl, draftVersions } from '@/lib/preview'
+import {
+  ensureRequestHostOperator,
+  getRecordField,
+  isEditorOrAdmin,
+  isVersionEditorOrAdmin,
+} from '@/access/roles'
+import { buildPreviewUrl, draftVersions, getOperatorId } from '@/lib/preview'
 import { revalidateGlobalPublicContent } from '@/lib/publicContentPublishing'
 
-export const HomePage: GlobalConfig = {
+export const HomePage: CollectionConfig = {
   slug: 'home-page',
-  label: 'Home Page',
+  labels: { singular: 'Home Page', plural: 'Home Pages' },
   admin: {
     livePreview: {
-      url: ({ locale }) =>
-        buildPreviewUrl({
+      url: ({ data, locale }) => {
+        const operatorId = getOperatorId(data?.operator)
+        if (operatorId === null) return null
+        return buildPreviewUrl({
           collection: 'home-page',
+          operatorId,
           locale,
           path: '/',
           slug: 'home-page',
-        }),
+        })
+      },
     },
-    preview: (_, { locale }) =>
-      buildPreviewUrl({
+    preview: (data, { locale }) => {
+      const operatorId = getOperatorId(data?.operator)
+      if (operatorId === null) return null
+      return buildPreviewUrl({
         collection: 'home-page',
+        operatorId,
         locale,
         path: '/',
         slug: 'home-page',
-      }),
+      })
+    },
   },
   access: {
     read: publishedOrStaff,
+    create: isEditorOrAdmin,
     update: isEditorOrAdmin,
+    delete: () => false,
+    readVersions: isVersionEditorOrAdmin,
   },
   versions: draftVersions,
   hooks: {
-    afterChange: [() => revalidateGlobalPublicContent()],
+    beforeValidate: [ensureRequestHostOperator, ensureHomeVideoOperator],
+    afterChange: [
+      ({ doc }) => revalidateGlobalPublicContent(getOperatorId(getRecordField(doc, 'operator'))),
+    ],
   },
   fields: [
     {
