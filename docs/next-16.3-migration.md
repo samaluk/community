@@ -21,7 +21,9 @@ issues may differ from the current app routes.
 
 The app already used Next.js and `@next/playwright` 16.3.3 before this follow-up.
 The changes below complete the remaining application work on that version.
-Preview deployment verification is still pending an isolated database.
+On 2026-10-19 UTC, an isolated Preview running Next.js 16.4.2 passed #186's
+immutable-asset and mutable public-content freshness checks. The September and
+2026-10-18 observations below remain dated history; the Preview blocker is resolved.
 
 ## CMS rendering and recovery
 
@@ -125,6 +127,13 @@ cards appeared on that flow. The same server's overlay did not appear at
 
 ## #186: deployment check
 
+All acceptance criteria were verified on an isolated Preview on 2026-10-19 UTC.
+Vercel supplies immutable-asset support through its adapter; the application
+keeps `supportsImmutableAssets` unset. The earlier observations below record
+the investigation before the successful Preview verification.
+
+### Production inspection on 2026-09-07
+
 The 2026-09-07 inspection identified Vercel project `community`
 (`prj_TVrFCtqtR1HbZoiwI8lfe3pjJnaL`). The CLI listed no ready Preview deployments.
 The latest ready deployment at that time was the
@@ -160,22 +169,20 @@ returned zero variables. The all-environment metadata listed database
 configuration for Production and Development only; no database connection or
 other variable targeted Preview. No environment values were printed or pulled.
 
-Preview verification therefore remains blocked by missing isolated Preview
-configuration. The app requires `POSTGRES_URL`, `PAYLOAD_SECRET`,
+At that time, Preview verification was blocked by missing isolated Preview
+configuration. The app required `POSTGRES_URL`, `PAYLOAD_SECRET`,
 `PREVIEW_SECRET`, and `NEXT_PUBLIC_SERVER_URL`. Its build script runs Payload
 migrations and a schema push before the Next.js build, so a Preview must have
 its own database rather than reuse Production credentials. Any upload testing
 also needs storage isolated from Production. No deployment, database, remote
 configuration, or Production resource was changed during this recheck.
 
-`apps/web/vercel.json` disables automatic Git deployments for branches other
-than `master`. Once an operator supplies isolated Preview configuration, use a
-manual Preview deployment containing the implementation. Read its HTML and
-request a referenced hashed CSS/JavaScript asset with `vercel curl`: confirm
-`/_next/static/immutable/`, no `?dpl` query, and
-`cache-control: public,max-age=31536000,immutable`. Check a mutable public or
-Payload media resource separately, including its freshness after an update,
-before marking all of #186's acceptance criteria verified.
+`apps/web/vercel.json` disabled automatic Git deployments for branches other
+than `master`. The remaining verification plan was to provision isolated
+Preview configuration, create a manual Preview, inspect its HTML and referenced
+hashed CSS/JavaScript assets with `vercel curl`, and verify a mutable resource's
+freshness after an update. The 2026-10-19 verification below completed that plan
+using mutable public CMS content.
 
 The installed Next.js 16.4.2 docs still identify `supportsImmutableAssets` as
 primarily an adapter-author setting and warn that enabling it without provider
@@ -183,6 +190,49 @@ support can break deployments. Leave it unset in the app configuration. The
 adapter guide requires immutable assets to remain available across deployments
 and non-immutable assets to retain their deployment-scoped handling; no app
 override is needed to request that contract from Vercel.
+
+### Successful Preview verification on 2026-10-19 UTC
+
+The same Vercel project in scope `sebastianmaluks-projects`, with app root
+`apps/web`, deployed Next.js 16.4.2 as
+[`dpl_BbCYfHUgZU2FKhUY29VWgx3fFzBY`](https://community-4emy700v6-sebastianmaluks-projects.vercel.app).
+Its explicitly assigned canonical alias is
+<https://community-git-feat-operator-tenancy-sebastianmaluks-projects.vercel.app>.
+The source was commit `758d0a7999f29527d1816c64ce1787760e15d613` from
+[#457](https://github.com/samaluk/community/pull/457). Immutable-asset support is
+adapter-managed and unchanged from `master`'s Next.js 16.4.2 configuration.
+
+A new, empty Neon Free resource, `community-preview-isolated`
+(`store_8bfpqoWuE6WR25To`, Neon project `bold-art-19758544`), was connected only
+to Preview. Its migrations and schema were initialized with six synthetic
+public fixtures. No private Production data was copied. The Production
+resource, store, and database were untouched, and <https://mbqb.vercel.app>
+continued returning HTTP 200 throughout.
+
+Authenticated `vercel curl` inspection of the Preview home HTML found the title
+`Community`, 11 `/_next/static/immutable/` asset references, and zero `?dpl`
+suffixes. Both referenced assets below returned HTTP 200 with
+`cache-control: public,max-age=31536000,immutable`:
+
+- CSS: `/_next/static/immutable/chunks/2wi5em9rkl9np.css`
+- JavaScript: `/_next/static/immutable/chunks/3t26w73c-up6d.js`
+
+The mutable home HTML returned HTTP 200 with
+`cache-control: public,max-age=0,must-revalidate`.
+
+The existing `apps/web/tests/e2e/cms-isr.e2e.spec.ts` workflow passed against the remote
+Preview: **1 passed in 15.0 seconds, with zero retries**. It used a temporary
+private configuration and the existing automation bypass while deployment
+protection stayed enabled. Using only isolated Preview data, it verified the
+generic streaming shell, hidden drafts, publishing and editing, and invalidation
+and freshness of warmed public content. Its `finally` cleanup removed temporary
+Places and the test administrator.
+
+Mutable public CMS content supplied the freshness evidence for #186. Media
+replacement was not tested; Preview storage intentionally did not use
+Production Blob. The missing isolated Preview configuration recorded in
+[#456](https://github.com/samaluk/community/pull/456) is resolved, and #186's
+acceptance criteria are complete.
 
 ## #188: `import.meta.glob` audit
 
