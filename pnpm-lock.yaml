@@ -167,8 +167,8 @@ importers:
   .:
     devDependencies:
       '@shadcn/lint':
-        specifier: 0.2.1
-        version: 0.2.1(@typescript-eslint/parser@8.70.0(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))
+        specifier: 0.2.3
+        version: 0.2.3(@typescript-eslint/parser@8.70.0(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))
       fallow:
         specifier: 3.34.1
         version: 3.34.1
@@ -2728,8 +2728,8 @@ packages:
     resolution: {integrity: sha512-rzegZjMFFgCp3o+N8+XU13rfSvz4B+f8rU0ijBGrQcHdMNyfsFDTu1UTm262JofmrV2u+s+D0u0vFTnqtOGkbA==}
     engines: {node: '>=18'}
 
-  '@shadcn/lint@0.2.1':
-    resolution: {integrity: sha512-sDgmh/lb4yiPJMJZe5/jE6Vq5mgBzaIvKcdQ98faZk4c99WKTqASEhUqR6XCp7DDc29LwqTRIsula7kfhhDQnQ==}
+  '@shadcn/lint@0.2.3':
+    resolution: {integrity: sha512-N/eAXidyPYXpbUOzPCf6uX5UN/hhObMZbrURrHe71CLNvPio78agqBt4EW/V89KQyS1NTxXcqMsNfiLxsBh8sA==}
     engines: {node: '>=20.19'}
     peerDependencies:
       '@typescript-eslint/parser': '>=8.40.0'
@@ -8344,7 +8344,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@shadcn/lint@0.2.1(@typescript-eslint/parser@8.70.0(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))':
+  '@shadcn/lint@0.2.3(@typescript-eslint/parser@8.70.0(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))':
     dependencies:
       '@eslint/core': 0.17.0
       cn: 0.4.0
