@@ -48,7 +48,7 @@
     "typecheck": "pnpm --filter @community/web typecheck"
   },
   "devDependencies": {
-    "@shadcn/lint": "0.2.1",
+    "@shadcn/lint": "0.2.3",
     "fallow": "3.34.1",
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
