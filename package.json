@@ -21,7 +21,7 @@
     "fallow:dead-code": "fallow dead-code --fail-on-issues",
     "fallow:dupes": "fallow dupes --fail-on-issues",
     "fallow:health": "fallow health --coverage coverage/coverage-final.json --fail-on-issues",
-    "fallow:staged": "git diff --cached --unified=0 --no-ext-diff --src-prefix=a/ --dst-prefix=b/ | fallow audit --diff-stdin",
+    "fallow:staged": "git diff --cached --unified=0 --no-ext-diff --src-prefix=a/ --dst-prefix=b/ | fallow audit --diff-stdin && git diff --cached --unified=0 --no-ext-diff --src-prefix=a/ --dst-prefix=b/ | fallow health --complexity --diff-stdin --fail-on-issues",
     "fallow:full": "fallow audit --coverage coverage/coverage-final.json && fallow --coverage coverage/coverage-final.json --fail-on-issues",
     "fallow:ci": "pnpm fallow:full",
     "generate:types": "pnpm --filter @community/web generate:types",
@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@shadcn/lint": "0.2.3",
-    "fallow": "3.34.1",
+    "fallow": "3.35.0",
     "oxfmt": "0.74.0",
     "oxlint": "1.89.0",
     "oxlint-tailwindcss": "1.16.0",
