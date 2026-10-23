@@ -11,7 +11,7 @@ duplication needs a documented, content-and-count-specific exception.
 
 | Surface | Command | Scope |
 |---|---|---|
-| pre-commit | `pnpm fallow:staged` | Strict audit of staged hunks |
+| pre-commit | `pnpm fallow:staged` | Strict audit and health checks of staged hunks |
 | pre-push / `hk check` | `pnpm test:coverage && pnpm fallow:ci` | Strict changed-code audit plus full repository analysis using fresh coverage |
 | CI — `Test with coverage` | `pnpm test:coverage` | Unit suite; produces the shared coverage artifact |
 | CI — `Fallow gate` | `pnpm fallow:ci` | Same covered gate as local checks |
@@ -22,8 +22,12 @@ required checks on `master`.
 
 The staged script forces canonical `a/` and `b/` diff headers and disables
 external diff drivers so Git preferences cannot silently empty Fallow's line
-scope. During pre-commit, `hk` stashes unstaged work before the audit. Running
-the script directly analyzes the current working tree scoped to staged hunks.
+scope. Both the audit and standalone health check receive the staged diff.
+Audit exempts test-file complexity even with `gate: all`; standalone health
+with `--fail-on-issues` keeps those findings blocking, using the same thresholds
+and exclusions. During pre-commit, `hk` stashes unstaged work before both checks.
+Running the script directly analyzes the current working tree scoped to staged
+hunks.
 
 ## Commands
 
@@ -31,7 +35,7 @@ the script directly analyzes the current working tree scoped to staged hunks.
 pnpm test:coverage          # Generate coverage/coverage-final.json first
 pnpm fallow:ci              # Alias of fallow:full, used by hooks and CI
 pnpm fallow:full            # Changed-code audit, then combined full scan
-pnpm fallow:staged          # Staged diff; audit.gate and typeAware come from config
+pnpm fallow:staged          # Staged-hunk audit and strict health; no coverage required
 pnpm fallow:dead-code       # Strict standalone dead-code analysis
 pnpm fallow:dupes           # Standalone duplication analysis
 pnpm fallow:health          # Standalone coverage-aware health analysis
@@ -153,7 +157,8 @@ identify the upgrade range, without adding release-specific claims to this guide
 5. Generate fresh coverage and run `pnpm fallow:ci`, the standalone analyses,
    and a representative staged diff through `fallow audit --diff-stdin`.
    Verify added lines reach the staged audit, an intentionally unused staged
-   file fails, and pre-commit audits the index with unstaged work stashed.
+   file fails, an over-threshold staged test/helper fails, and pre-commit checks
+   the index with unstaged work stashed.
    The covered full gate must use the current checkout. Exercise cross-checkout
    coverage rebasing and the Action's
    changed-code audit options when those integrations change. Run lint,

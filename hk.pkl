@@ -57,7 +57,8 @@ local repo_checks = new Mapping<String, Step> {
   ["typecheck"] {
     check = "pnpm typecheck"
   }
-  // Strict staged gate: every finding on a staged hunk fails (--gate all).
+  // Strict staged gate: audit (--gate all) plus diff-scoped health, because
+  // audit exempts test-file complexity even with --gate all.
   // There is no pre-existing backlog to grandfather (see issue #264).
   ["fallow"] {
     check = "pnpm fallow:staged"
