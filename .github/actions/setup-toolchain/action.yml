@@ -18,7 +18,7 @@ runs:
     # pnpm/setup installs Node (from devEngines.runtime in the root package.json)
     # plus the exact self-contained pnpm version from packageManager, then runs
     # pnpm install. `runtime: node` removes the previous actions/setup-node step.
-    - uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+    - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
       with:
         runtime: node
         # Self-hosted runners run concurrent jobs on one machine; the default ~/setup-pnpm
