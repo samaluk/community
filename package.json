@@ -52,7 +52,7 @@
     "fallow": "3.38.0",
     "oxfmt": "0.75.0",
     "oxlint": "1.90.0",
-    "oxlint-tailwindcss": "1.17.0",
+    "oxlint-tailwindcss": "1.17.1",
     "oxlint-tsgolint": "7.0.2005",
     "react-doctor": "0.9.18"
   }
