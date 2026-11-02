@@ -49,11 +49,11 @@
   },
   "devDependencies": {
     "@shadcn/lint": "0.2.3",
-    "fallow": "3.37.0",
+    "fallow": "3.38.1",
     "oxfmt": "0.75.0",
     "oxlint": "1.90.0",
-    "oxlint-tailwindcss": "1.17.0",
+    "oxlint-tailwindcss": "1.17.1",
     "oxlint-tsgolint": "7.0.2005",
-    "react-doctor": "0.9.18"
+    "react-doctor": "0.9.19"
   }
 }
