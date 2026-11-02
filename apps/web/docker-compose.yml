@@ -1,13 +1,13 @@
 services:
   payload:
-    image: node:24.22.2-alpine
+    image: node:26.13.0-alpine
     ports:
       - '3000:3000'
     volumes:
       - ../..:/home/node/app
       - node_modules:/home/node/app/node_modules
     working_dir: /home/node/app
-    command: sh -c "corepack enable && pnpm install && pnpm dev"
+    command: sh -c "npm install --global corepack@0.36.0 && corepack enable && pnpm install && pnpm dev"
     depends_on:
       - postgres
     env_file:

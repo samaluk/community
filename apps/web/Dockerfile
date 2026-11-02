@@ -2,7 +2,9 @@
 # From https://github.com/vercel/next.js/blob/canary/examples/with-docker/Dockerfile
 
 # Node version must match engines.node in the repo root package.json
-FROM node:24.22.2-alpine AS base
+FROM node:26.13.0-alpine AS base
+
+RUN npm install --global corepack@0.36.0
 
 # Install dependencies only when needed
 FROM base AS deps
