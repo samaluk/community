@@ -188,8 +188,8 @@ importers:
         specifier: 7.0.2005
         version: 7.0.2005
       react-doctor:
-        specifier: 0.9.19
-        version: 0.9.19(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint-tsgolint@7.0.2005)(react@19.3.1)(supports-color@7.2.0)
+        specifier: 0.9.21
+        version: 0.9.21(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint-tsgolint@7.0.2005)(react@19.3.1)(supports-color@7.2.0)
 
   apps/web:
     dependencies:
@@ -4983,8 +4983,8 @@ packages:
       vite-plus:
         optional: true
 
-  oxlint-plugin-react-doctor@0.9.19:
-    resolution: {integrity: sha512-mW+AfJYEQmwaa7LWqNKydMa9XXOK8kGUbXN6MkqK+/Lbcj9CcGcfromwl8URlgOKtTvFjiz3t5KudIwU/jYC5Q==}
+  oxlint-plugin-react-doctor@0.9.21:
+    resolution: {integrity: sha512-6uezGzM98w3qS3q89NpfFm5melOhCoIsixc+C5bNQx7p4IZvfK/lkSrud3xmjNCu14N3WCSnPOXz0fRjmJWipQ==}
     engines: {node: ^20.19.0 || >=22.13.0}
 
   oxlint-tailwindcss@1.17.1:
@@ -5250,8 +5250,8 @@ packages:
       react: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
-  react-doctor@0.9.19:
-    resolution: {integrity: sha512-2KrG7ZbdVN3VKhT6YRAPyh6e14rfBk1JpbWWNE8eYVo/dofFq7S1A9QKEDzJQXhO/i9xi6snJS0PnAovj8orkA==}
+  react-doctor@0.9.21:
+    resolution: {integrity: sha512-ahV3umcswkGThtDng2tBpJSwRLz+B9t2H9iAXglgwsbRa++g7sJGKy46sYIf56eGQpAJAKUy0ak4dfzz638+5Q==}
     engines: {node: ^20.19.0 || >=22.13.0}
     hasBin: true
 
@@ -10212,7 +10212,7 @@ snapshots:
       '@oxfmt/binding-win32-ia32-msvc': 0.75.0
       '@oxfmt/binding-win32-x64-msvc': 0.75.0
 
-  oxlint-plugin-react-doctor@0.9.19:
+  oxlint-plugin-react-doctor@0.9.21:
     dependencies:
       '@shaderfrog/glsl-parser': 7.0.1
       '@typescript-eslint/types': 8.70.0
@@ -10545,7 +10545,7 @@ snapshots:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
 
-  react-doctor@0.9.19(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint-tsgolint@7.0.2005)(react@19.3.1)(supports-color@7.2.0):
+  react-doctor@0.9.21(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint-tsgolint@7.0.2005)(react@19.3.1)(supports-color@7.2.0):
     dependencies:
       '@astrojs/compiler': 4.0.0
       '@sentry/node': 10.70.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
@@ -10560,7 +10560,7 @@ snapshots:
       oxc-parser: 0.148.0
       oxc-resolver: 11.24.2
       oxlint: 1.81.0(oxlint-tsgolint@7.0.2005)
-      oxlint-plugin-react-doctor: 0.9.19
+      oxlint-plugin-react-doctor: 0.9.21
       playwright-core: 1.64.1
       prompts: 2.4.2
       typescript: 5.9.3
