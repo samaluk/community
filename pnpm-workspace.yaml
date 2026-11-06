@@ -18,3 +18,5 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
   - unrs-resolver
+patchedDependencies:
+  '@payloadcms/plugin-multi-tenant@3.93.0': patches/@payloadcms__plugin-multi-tenant@3.93.0.patch

@@ -1,10 +1,89 @@
 // @vitest-environment node
 
 import { BasePayload, type Payload } from 'payload'
+import { formatAdminURL } from 'payload/shared'
 import { expect, it } from 'vitest'
+import { getGlobalViewRedirect } from '../../node_modules/@payloadcms/plugin-multi-tenant/dist/utilities/getGlobalViewRedirect.js'
 
 import config from '@/payload.config'
 import { DELETE as deleteREST } from '@/app/(payload)/api/[...slug]/route'
+
+it('redirects selected-Operator globals and creates a Home Page draft with request access', async () => {
+  const payload = await new BasePayload().init({ config })
+  const prefix = `singleton-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+  try {
+    const operator = await createOperator(payload, prefix)
+    const user = await payload.create({
+      collection: 'users',
+      data: {
+        email: `${prefix}@example.test`,
+        password: 'singleton-test-password',
+        platformAdmin: true,
+      },
+      overrideAccess: true,
+    })
+    const settings = await payload.create({
+      collection: 'site-settings',
+      data: { operator: operator.id, brandName: prefix },
+      overrideAccess: true,
+    })
+    const redirectArgs = {
+      headers: new Headers({ host: operator.domain, cookie: `payload-tenant=${operator.id}` }),
+      payload,
+      tenantFieldName: 'operator',
+      tenantsArrayFieldName: 'tenants',
+      tenantsArrayTenantFieldName: 'operator',
+      tenantsCollectionSlug: 'operators',
+      useAsTitle: 'name',
+      user: { ...user, collection: 'users' as const },
+      userHasAccessToAllTenants: () => true,
+      view: 'list' as const,
+    }
+
+    expect(await getGlobalViewRedirect({ ...redirectArgs, slug: 'site-settings' })).toBe(
+      formatAdminURL({
+        adminRoute: payload.config.routes.admin,
+        path: `/collections/site-settings/${settings.id}`,
+        serverURL: payload.config.serverURL,
+      }),
+    )
+    const homeRedirect = await getGlobalViewRedirect({ ...redirectArgs, slug: 'home-page' })
+    const homes = await payload.find({
+      collection: 'home-page',
+      depth: 0,
+      where: { operator: { equals: operator.id } },
+      draft: true,
+      overrideAccess: true,
+    })
+    expect(homes.docs).toHaveLength(1)
+    expect(homes.docs[0]).toMatchObject({ operator: operator.id, _status: 'draft' })
+    expect(homeRedirect).toBe(
+      formatAdminURL({
+        adminRoute: payload.config.routes.admin,
+        path: `/collections/home-page/${homes.docs[0].id}`,
+        serverURL: payload.config.serverURL,
+      }),
+    )
+    expect(await getGlobalViewRedirect({ ...redirectArgs, slug: 'home-page' })).toBe(homeRedirect)
+    expect(
+      await getGlobalViewRedirect({
+        ...redirectArgs,
+        slug: 'site-settings',
+        headers: new Headers({
+          host: 'unknown.example.test',
+          cookie: `payload-tenant=${operator.id}`,
+        }),
+      }),
+    ).toBeUndefined()
+  } finally {
+    try {
+      await cleanupFixture(payload, prefix)
+    } finally {
+      await payload.destroy()
+    }
+  }
+})
 
 it('rejects foreign singleton deletion through REST and retains the home page history', async () => {
   const payload = await new BasePayload().init({ config })
@@ -118,7 +197,7 @@ function homeVersions(payload: Payload, id: number) {
 async function cleanupFixture(payload: Payload, prefix: string) {
   await payload.delete({
     collection: 'home-page',
-    where: { heroVideoAlt: { equals: prefix } },
+    where: { 'operator.name': { contains: prefix } },
     overrideAccess: true,
   })
   await payload.delete({
