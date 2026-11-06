@@ -1,0 +1,45 @@
+diff --git a/dist/utilities/getGlobalViewRedirect.js b/dist/utilities/getGlobalViewRedirect.js
+index a96388b57ea32bf7374759207a75d549a85d5fd6..5476089b41ea07643f8e55ba9c144756b60861b4 100644
+--- a/dist/utilities/getGlobalViewRedirect.js
++++ b/dist/utilities/getGlobalViewRedirect.js
+@@ -31,6 +31,7 @@ export async function getGlobalViewRedirect({ slug: collectionSlug, docID, heade
+                 limit: 1,
+                 overrideAccess: false,
+                 pagination: false,
++                req: { headers },
+                 select: {
+                     id: true
+                 },
+@@ -55,6 +56,7 @@ export async function getGlobalViewRedirect({ slug: collectionSlug, docID, heade
+                     // so we need to generate a redirect to the create route
+                     redirectRoute = await generateCreateRedirect({
+                         collectionSlug,
++                        headers,
+                         payload,
+                         tenantFieldName,
+                         tenantID: tenant,
+@@ -71,6 +73,7 @@ export async function getGlobalViewRedirect({ slug: collectionSlug, docID, heade
+                     // so we need to generate a redirect to the create route
+                     redirectRoute = await generateCreateRedirect({
+                         collectionSlug,
++                        headers,
+                         payload,
+                         tenantFieldName,
+                         tenantID: tenant,
+@@ -106,7 +109,7 @@ export async function getGlobalViewRedirect({ slug: collectionSlug, docID, heade
+  *
+  * If autosave is enabled on the collection, we need to create the document and then redirect to it.
+  * Otherwise we can redirect to the default create route.
+- */ async function generateCreateRedirect({ collectionSlug, payload, tenantFieldName, tenantID, user }) {
++ */ async function generateCreateRedirect({ collectionSlug, headers, payload, tenantFieldName, tenantID, user }) {
+     const collectionConfig = payload.collections[collectionSlug]?.config;
+     if (hasAutosaveEnabled(collectionConfig)) {
+         // Autosave is enabled, create a document first
+@@ -119,6 +122,7 @@ export async function getGlobalViewRedirect({ slug: collectionSlug, docID, heade
+                 depth: 0,
+                 draft: true,
+                 overrideAccess: false,
++                req: { headers },
+                 select: {
+                     id: true
+                 },

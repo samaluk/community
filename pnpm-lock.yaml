@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@payloadcms/plugin-multi-tenant@3.93.0': 24f2b8ac307ed9efc0917d5047d4d86981ce6f714451dcc98b3b44531fccbb01
+
 importers:
 
   .:
@@ -207,7 +210,7 @@ importers:
         version: 3.93.0(@types/react@19.3.0)(graphql@17.1.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2)
       '@payloadcms/plugin-multi-tenant':
         specifier: 3.93.0
-        version: 3.93.0(@payloadcms/ui@3.93.0(@types/react@19.3.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))
+        version: 3.93.0(patch_hash=24f2b8ac307ed9efc0917d5047d4d86981ce6f714451dcc98b3b44531fccbb01)(@payloadcms/ui@3.93.0(@types/react@19.3.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))
       '@payloadcms/richtext-lexical':
         specifier: 3.93.0
         version: 3.93.0(e5aba21c5777d274f83b9ea0d01aab1f)
@@ -7845,7 +7848,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@payloadcms/plugin-multi-tenant@3.93.0(@payloadcms/ui@3.93.0(@types/react@19.3.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))':
+  '@payloadcms/plugin-multi-tenant@3.93.0(patch_hash=24f2b8ac307ed9efc0917d5047d4d86981ce6f714451dcc98b3b44531fccbb01)(@payloadcms/ui@3.93.0(@types/react@19.3.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))':
     dependencies:
       '@payloadcms/ui': 3.93.0(@types/react@19.3.0)(monaco-editor@0.55.1)(next@16.4.5(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@26.6.6)(babel-plugin-macros@3.1.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass@1.77.4))(payload@3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@7.2.0)(typescript@7.0.2)
       payload: 3.93.0(graphql@17.1.0)(supports-color@7.2.0)(typescript@7.0.2)
