@@ -93,6 +93,11 @@ pnpm fallow fix --yes
 - Dependency exceptions cover the interactive shadcn CLI and plugins loaded
   by the secondary Oxlint config. Stylesheet imports and Playwright imports
   provide native evidence for their dependencies without exceptions.
+- Binary exceptions name only externally provisioned tools: `pg_dump` is the
+  PostgreSQL client used when the baseline migration script cannot use Docker,
+  and the globally installed, authenticated `vercel` CLI pulls environment
+  files. Neither belongs in the application's npm dependencies. Keep the
+  `unlisted-binaries` rule enabled for every other command.
 - Vendored shadcn/Base UI primitive exports remain available. Reviewed clone
   exceptions cover upstream primitives, declarative detail-route wiring around
   the shared document component, and intentional stylesheet patterns. Their
