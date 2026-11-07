@@ -28,6 +28,10 @@
     "@shadcn/lint",
     "oxlint-tailwindcss"
   ],
+  "ignoreBinaries": [
+    "pg_dump",
+    "vercel"
+  ],
   "typeAware": {
     "enabled": true,
     "require": "complete",
