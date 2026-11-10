@@ -50,8 +50,8 @@
   "devDependencies": {
     "@shadcn/lint": "0.2.5",
     "fallow": "3.41.0",
-    "oxfmt": "0.77.0",
-    "oxlint": "1.92.0",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
     "oxlint-tailwindcss": "1.17.1",
     "oxlint-tsgolint": "7.0.2006",
     "react-doctor": "0.9.22"
