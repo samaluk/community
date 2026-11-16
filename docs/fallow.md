@@ -1,7 +1,11 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI and GitHub Action are pinned together and updated by Renovate.
+The CLI, type-aware companion, and GitHub Action are pinned together and updated
+by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
+same version as `fallow`: the CLI does not install this optional companion, but
+our complete type-aware gates require it. The Action provisions its own companion;
+that does not satisfy local scripts or the separate full-gate job.
 The strict gate established in [issue #264](https://github.com/samaluk/community/issues/264)
 uses no baselines or regression allowances. The full gate blocks every remaining
 clone group, and `--fail-on-issues` also blocks warning-severity findings. Intentional
