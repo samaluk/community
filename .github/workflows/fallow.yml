@@ -98,7 +98,7 @@ jobs:
       # The Action reads the pinned CLI version and provisions its semantic
       # companion. The full gate requires complete types; review is best-effort.
       - name: Fallow changed-code audit
-        uses: fallow-rs/fallow@8cc305d74aeb77b7ab316388f8ab41cce20a394f # v3.43.1
+        uses: fallow-rs/fallow@b6a3e048dc882bdf11c8269c73167223b9e32774 # v3.43.2
         with:
           command: audit
           gate: new-only
