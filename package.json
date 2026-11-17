@@ -53,7 +53,7 @@
     "fallow-type-aware": "3.43.1",
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
-    "oxlint-tailwindcss": "1.17.1",
+    "oxlint-tailwindcss": "1.17.2",
     "oxlint-tsgolint": "7.0.2007",
     "react-doctor": "0.9.23"
   }
