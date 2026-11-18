@@ -19,4 +19,4 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 patchedDependencies:
-  '@payloadcms/plugin-multi-tenant@3.93.0': patches/@payloadcms__plugin-multi-tenant@3.93.0.patch
+  '@payloadcms/plugin-multi-tenant@3.94.0': patches/@payloadcms__plugin-multi-tenant@3.94.0.patch
