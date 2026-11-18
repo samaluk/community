@@ -23,8 +23,9 @@
   "ignoreDependencies": [
     // Invoked interactively to manage vendored components.
     "shadcn",
-    // Loaded by .oxlintrc.tailwind.json; Fallow's Oxlint plugin reads only
-    // standard config filenames, not this secondary --config file.
+    // Loaded by secondary Oxlint --config files; Fallow reads only standard
+    // config filenames, not .oxlintrc.tailwind.json or .oxlintrc.testing.json.
+    "@interfere/landmines",
     "@shadcn/lint",
     "oxlint-tailwindcss"
   ],
