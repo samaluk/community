@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "off"
+  },
+  "plugins": [],
+  "jsPlugins": [
+    {
+      "name": "landmines-testing",
+      "specifier": "@interfere/landmines/testing"
+    }
+  ],
+  "rules": {
+    "landmines-testing/no-test-doubles": "error",
+    "landmines-testing/strict-msw": "error",
+    "landmines-testing/no-fixed-sleep": "error",
+    "landmines-testing/no-unsignaled-poll": "error",
+    "landmines-testing/no-flake-masking": [
+      "error",
+      {
+        "allow": {
+          "apps/web/tests/int/legacyVersionHtml.int.spec.ts": 1
+        }
+      }
+    ]
+  }
+}

@@ -29,10 +29,12 @@ const stubs = vi.hoisted(() => {
   return { geo, sliderProps }
 })
 
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@/app/(frontend)/places/PlacesGeoContext', () => ({
   usePlacesGeo: () => stubs.geo.current,
 }))
 
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@/components/ui/slider', async () => {
   const { createElement } = await import('react')
 

@@ -21,6 +21,7 @@ describe('Operator relationship field validation', () => {
 
   it('confirms local assignments exist', async () => {
     const validate = validateOperatorField()
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     const findByID = vi.fn().mockResolvedValue({ id: 17, status: 'active' })
     const req = { payloadAPI: 'local', payload: { findByID } }
 
@@ -39,6 +40,7 @@ describe('Operator relationship field validation', () => {
     const req = {
       headers: new Headers({ host: 'club.example.test' }),
       payload: {
+        // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
         find: vi.fn().mockResolvedValue({
           docs: [{ domain: 'club.example.test', id: 17, status: 'active' }],
         }),
