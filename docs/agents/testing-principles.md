@@ -36,3 +36,27 @@ Before adding a test, ask:
 3. Does this assertion belong to an existing workflow test instead of a new isolated case?
 4. Am I testing behavior, or merely pinning implementation detail or prose?
 5. Will this test remain useful enough to justify its maintenance and runtime cost?
+
+## Landmines lint gate
+
+`pnpm lint:testing` runs the five `landmines-testing` rules as errors via
+`.oxlintrc.testing.json`. Both `pnpm check:lint` (CI) and the staged hk lint
+steps include this gate. It intentionally does not use `.oxlintignore`, whose
+legacy exclusions hide tests from the core and Tailwind lint passes. The testing
+pass leaves unrelated built-in rules disabled; it does not change test behavior.
+
+Existing violations are grandfathered, not permission for new ones:
+
+- Rules with an `allow` option use exact per-file counts in the testing config.
+  Reduce or remove the allowance when fixing an existing violation; stale counts
+  fail lint. The installed version also supports this for `no-unsignaled-poll`.
+- `no-test-doubles` has no allowlist option. Its existing violations use narrow
+  `oxlint-disable-next-line` directives with `TODO(landmines)` notes. Remove the
+  directive when replacing the test double; do not extend it to new code.
+
+The initial backlog is **85 violations in 11 files**: 84 `no-test-doubles`
+violations in 10 files and one `no-flake-masking` violation in one file.
+`strict-msw`, `no-fixed-sleep`, and `no-unsignaled-poll` start at zero.
+`landmines-structure/test-file-names` is deferred: the initial probe reports
+102 violations, requiring a separate naming/layout migration. No style or type
+plugins are registered.

@@ -7,9 +7,13 @@ const mocks = vi.hoisted(() => ({
   getPublishedCmsQueryOptions: vi.fn(),
 }))
 
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@payload-config', () => ({ default: {} }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('next/cache', () => ({ cacheLife: vi.fn(), cacheTag: vi.fn() }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('payload', () => ({ getPayload: mocks.getPayload }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@/lib/cmsQuery', () => ({
   getCmsQueryOptions: mocks.getCmsQueryOptions,
   getPublishedCmsQueryOptions: mocks.getPublishedCmsQueryOptions,
@@ -20,8 +24,11 @@ import { getHomePageContent, getPublishedHomePageContent } from '@/lib/homePageC
 describe('home page content', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getPayload.mockResolvedValue({ find: mocks.find })
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.find.mockResolvedValue({ docs: [{ id: 10, operator: 2, heroVideo: null }] })
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getPublishedCmsQueryOptions.mockResolvedValue({
       draft: false,
       overrideAccess: false,
@@ -51,6 +58,7 @@ describe('home page content', () => {
 
   it('uses the authenticated draft request and keeps draft reads within the active operator', async () => {
     const req = { user: { id: 5 } }
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getCmsQueryOptions.mockResolvedValue({ draft: true, overrideAccess: false, req })
 
     await getHomePageContent(2, 'club.example', true)
@@ -68,6 +76,7 @@ describe('home page content', () => {
   })
 
   it('falls back to the published query when draft access is unavailable', async () => {
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getCmsQueryOptions.mockResolvedValue({ draft: false, overrideAccess: false })
 
     await getHomePageContent(2, 'club.example', true)
@@ -83,7 +92,9 @@ describe('home page content', () => {
   })
 
   it('returns no content when the CMS is unavailable', async () => {
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.find.mockRejectedValue(new Error('CMS unavailable'))
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
     await expect(getPublishedHomePageContent(2, 'club.example')).resolves.toBeNull()

@@ -32,6 +32,13 @@ local fixers = new Mapping<String, Step> {
     fix = "pnpm exec oxlint --fix {{files}} --ignore-path .oxlintignore --no-error-on-unmatched-pattern"
     output_summary = "combined"
   }
+  ["oxlint-testing"] {
+    glob = web_sources
+    exclusive = true
+    check = "pnpm exec oxlint {{files}} --config .oxlintrc.testing.json --no-error-on-unmatched-pattern"
+    fix = "pnpm exec oxlint {{files}} --config .oxlintrc.testing.json --no-error-on-unmatched-pattern"
+    output_summary = "combined"
+  }
   ["oxlint-tailwind"] {
     glob = web_sources
     exclusive = true

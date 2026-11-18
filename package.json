@@ -31,10 +31,10 @@
     "react-doctor:full": "react-doctor apps/web --scope full --yes --no-score --blocking warning",
     "format": "oxfmt --write apps/web",
     "format:check": "oxfmt --check apps/web",
-    "check:lint": "oxlint apps/web --ignore-path .oxlintignore && oxlint apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore",
+    "check:lint": "oxlint apps/web --ignore-path .oxlintignore && oxlint apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore && pnpm lint:testing",
     "oxlint": "pnpm check:lint",
     "lint:core": "oxlint apps/web --ignore-path .oxlintignore",
-    "lint:fix": "oxlint --fix apps/web --ignore-path .oxlintignore && oxlint --fix apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore",
+    "lint:fix": "oxlint --fix apps/web --ignore-path .oxlintignore && oxlint --fix apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore && pnpm lint:testing",
     "lint:fix:core": "oxlint --fix apps/web --ignore-path .oxlintignore",
     "lint:fix:tailwind": "oxlint --fix apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore",
     "lint:tailwind": "oxlint apps/web --config .oxlintrc.tailwind.json --ignore-path .oxlintignore",
@@ -45,9 +45,11 @@
     "test:e2e": "pnpm --filter @community/web test:e2e",
     "test:int": "pnpm --filter @community/web test:int",
     "test:unit": "pnpm --filter @community/web test:unit",
-    "typecheck": "pnpm --filter @community/web typecheck"
+    "typecheck": "pnpm --filter @community/web typecheck",
+    "lint:testing": "oxlint apps/web --config .oxlintrc.testing.json"
   },
   "devDependencies": {
+    "@interfere/landmines": "0.0.0",
     "@shadcn/lint": "0.2.5",
     "fallow": "3.43.2",
     "fallow-type-aware": "3.43.2",

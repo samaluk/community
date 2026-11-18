@@ -5,19 +5,26 @@ const mocks = vi.hoisted(() => ({
   draftEnable: vi.fn(),
   find: vi.fn(),
   getOperatorForHost: vi.fn(),
+  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   redirect: vi.fn(
     (path: string) => new Response(null, { status: 307, headers: { location: path } }),
   ),
   OperatorResolutionError: class OperatorResolutionError extends Error {},
 }))
 
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@payload-config', () => ({ default: {} }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@/env', () => ({ env: { PREVIEW_SECRET: 'preview-secret' } }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('payload', () => ({
   getPayload: async () => ({ auth: mocks.authenticate, find: mocks.find }),
 }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('next/headers', () => ({ draftMode: async () => ({ enable: mocks.draftEnable }) }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
+// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@/lib/operator', () => ({
   OperatorResolutionError: mocks.OperatorResolutionError,
   assertActiveOperator: (operator: { status: string }) => {
@@ -58,10 +65,13 @@ function previewRequest({
 describe('preview route authorization', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getOperatorForHost.mockResolvedValue(operator)
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.authenticate.mockResolvedValue({
       user: { id: 1, tenants: [{ operator: 101, role: 'editor' }] },
     })
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.find.mockResolvedValue({ docs: [{ id: 5 }] })
   })
 
@@ -89,11 +99,13 @@ describe('preview route authorization', () => {
     expect((await GET(previewRequest({ operatorId: 202 }))).status).toBe(404)
     expect(mocks.authenticate).not.toHaveBeenCalled()
 
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.authenticate.mockResolvedValueOnce({
       user: { id: 2, tenants: [{ operator: 202, role: 'editor' }] },
     })
     expect((await GET(previewRequest())).status).toBe(404)
 
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.authenticate.mockResolvedValueOnce({
       user: { id: 3, tenants: [{ operator: 101, role: 'validation-manager' }] },
     })
@@ -102,9 +114,11 @@ describe('preview route authorization', () => {
   })
 
   it('rejects suspended or unknown Hosts and unsafe preview paths', async () => {
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getOperatorForHost.mockResolvedValueOnce({ ...operator, status: 'suspended' })
     expect((await GET(previewRequest())).status).toBe(404)
 
+    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     mocks.getOperatorForHost.mockRejectedValueOnce(
       new mocks.OperatorResolutionError('unknown host'),
     )
