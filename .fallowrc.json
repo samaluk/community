@@ -83,8 +83,8 @@
       // styles.css: the @theme token-mapping block and the :root value
       // definitions are two different concerns that happen to both be long
       // lists of custom properties.
-      "dup:5994a08b:2",
-      "dup:a74aa6b3:2",
+      "dup:d063a134:3",
+      "dup:884da9ef:2",
       // styles.css: hero-video scrim overlays; the desktop and mobile variants
       // differ intentionally in gradient angle and stop values.
       "dup:f1c3dcc8:2"
