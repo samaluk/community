@@ -54,6 +54,11 @@ staff users and documents.
   The destination shell must be visible while the lock is held. Prerendered or
   cached content may appear immediately too; requiring it to remain hidden would
   reject successful prerendering.
+  The home Verify CTA uses its exact accessible link name: during Suspense
+  streaming and hydration, React can retain a hidden streaming copy alongside
+  the committed hero. A test-id locator also matches that hidden copy, whereas
+  the role locator targets the accessible CTA and still rejects duplicate
+  accessible links.
 - `offline.e2e.spec.ts` disconnects the browser after a link's prefetch. It checks
   the shell while the browser cannot reach the server, then reconnects and checks
   the content. Listing detail links opt into per-link prefetching to resolve the

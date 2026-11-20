@@ -91,7 +91,7 @@ test('home → Verify CTA commits instantly', async ({ page }) => {
   try {
     await page.goto('/')
 
-    const trigger = page.getByTestId('home-verify-cta')
+    const trigger = page.getByRole('link', { name: 'Verify membership', exact: true })
     await expect(trigger).toBeVisible({ timeout: 20_000 })
     await shell.waitUntilReady('Verify active membership.')
 
