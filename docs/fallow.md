@@ -15,7 +15,7 @@ duplication needs a documented, content-and-count-specific exception.
 
 | Surface | Command | Scope |
 |---|---|---|
-| pre-commit | `pnpm exec fallow audit --staged --quiet`, then separate `pnpm fallow:health:staged` | Strict index-snapshot audit and staged-hunk health check |
+| pre-commit | `pnpm exec fallow audit --staged --quiet`, separate `pnpm fallow:staged:branch` and `pnpm fallow:health:staged` | Strict index-snapshot audit, branch-relative audit, and staged-hunk health check |
 | pre-push / `hk check` | `pnpm test:coverage && pnpm fallow:ci` | Strict changed-code audit plus full repository analysis using fresh coverage |
 | CI — `Test with coverage` | `pnpm test:coverage` | Unit suite; produces the shared coverage artifact |
 | CI — `Fallow gate` | `pnpm fallow:ci` | Same covered gate as local checks |
@@ -29,9 +29,13 @@ working-tree content, and includes staged new files. `--quiet` keeps actionable
 findings visible. The separate health script forces canonical `a/` and `b/` diff
 headers and disables external diff drivers so Git preferences cannot silently
 empty its staged-hunk scope.
+The separate branch-relative audit retains the previous `--diff-stdin` check:
+native `--staged` compares only with `HEAD` and can miss an unused dependency
+whose manifest declaration was added in an earlier branch commit. The old
+branch-relative check must remain mandatory alongside the native command.
 Audit exempts test-file complexity even with `gate: all`; standalone health
 with `--fail-on-issues` keeps those findings blocking, using the same thresholds
-and exclusions. During pre-commit, `hk` stashes unstaged work before both checks.
+and exclusions. During pre-commit, `hk` stashes unstaged work before all staged checks.
 Running the health script directly analyzes the current working tree scoped to
 staged hunks; run it through `hk run pre-commit` for index-only isolation.
 
@@ -68,7 +72,9 @@ install a second hook manager or duplicate agent commit gate. Skip MCP changes
 because the existing `.mcp.json` already runs the local `pnpm exec fallow-mcp`.
 No shared configuration or another project's setup is required.
 
-The coverage job checks `agent status` before tests. Status is informational,
+The required full-gate job checks `agent status`, independently of the coverage
+producer and PR feedback job. Stale pointers block merging without preventing
+tests or new-only review feedback from running. Status is informational,
 so CI validates its JSON: all six committed guide/skill surfaces must be
 `installed`, and no surface may be `stale`. Absent optional hooks/MCP surfaces
 and the existing unmanaged MCP registration are intentional. After every
@@ -81,8 +87,9 @@ pnpm test:coverage          # Generate coverage/coverage-final.json first
 pnpm fallow:ci              # Alias of fallow:full, used by hooks and CI
 pnpm fallow:full            # Changed-code audit, then combined full scan
 pnpm fallow:staged          # Native index-snapshot audit; no coverage required
+pnpm fallow:staged:branch   # Retained branch-relative staged audit
 pnpm fallow:health:staged   # Separate strict health check of staged hunks
-hk run pre-commit          # Both gates, with unstaged changes stashed by hk
+hk run pre-commit          # All staged gates, with unstaged changes stashed by hk
 pnpm fallow:dead-code       # Strict standalone dead-code analysis
 pnpm fallow:dupes           # Standalone duplication analysis
 pnpm fallow:health          # Standalone coverage-aware health analysis

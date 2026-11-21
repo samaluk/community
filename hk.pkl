@@ -70,6 +70,9 @@ local repo_checks = new Mapping<String, Step> {
   ["fallow"] {
     check = "pnpm exec fallow audit --staged --quiet"
   }
+  ["fallow-branch-audit"] {
+    check = "pnpm fallow:staged:branch"
+  }
   ["fallow-health"] {
     check = "pnpm fallow:health:staged"
   }

@@ -32,24 +32,6 @@ jobs:
 
       - uses: ./.github/actions/setup-toolchain
 
-      - name: Check Fallow agent installation
-        run: |
-          pnpm exec fallow agent status --format json --quiet > "$RUNNER_TEMP/fallow-agent-status.json"
-          cat "$RUNNER_TEMP/fallow-agent-status.json"
-          jq -e '
-            . as $status |
-            .kind == "agent-status" and
-            all(.surfaces[]; .state != "stale") and
-            all([
-              "AGENTS.md", "CLAUDE.md",
-              ".agents/skills/fallow", ".agents/skills/fallow-setup",
-              ".claude/skills/fallow", ".claude/skills/fallow-setup"
-            ][]; . as $path |
-              any($status.surfaces[];
-                .path == $path and .state == "installed" and
-                (.step == "guide" or .step == "skill")))
-          ' "$RUNNER_TEMP/fallow-agent-status.json"
-
       - name: Test with coverage
         id: coverage
         run: |
@@ -77,6 +59,24 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/setup-toolchain
+
+      - name: Check Fallow agent installation
+        run: |
+          pnpm exec fallow agent status --format json --quiet > "$RUNNER_TEMP/fallow-agent-status.json"
+          cat "$RUNNER_TEMP/fallow-agent-status.json"
+          jq -e '
+            . as $status |
+            .kind == "agent-status" and
+            all(.surfaces[]; .state != "stale") and
+            all([
+              "AGENTS.md", "CLAUDE.md",
+              ".agents/skills/fallow", ".agents/skills/fallow-setup",
+              ".claude/skills/fallow", ".claude/skills/fallow-setup"
+            ][]; . as $path |
+              any($status.surfaces[];
+                .path == $path and .state == "installed" and
+                (.step == "guide" or .step == "skill")))
+          ' "$RUNNER_TEMP/fallow-agent-status.json"
 
       - name: Download coverage
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
