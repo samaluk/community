@@ -184,6 +184,11 @@ that path through `FALLOW_COVERAGE_ROOT`; the review Action uses `coverage-root`
 Fallow rebases Istanbul paths to the consuming checkout itself, so the artifact
 needs no rewriting, including when jobs use different checkout directories.
 
+Both analysis jobs install workspace dependencies through the existing toolchain
+setup action. Installing the CLI and its companion alone does not provide the
+project dependencies needed for framework plugins and type resolution; without
+them the review can report `node-modules-missing` and misleading findings.
+
 The official Action posts the sticky summary and inline review comments using
 `pull-requests: write` and `checks: write`. Keep `review-comments: true` and
 `review-guidance: true`; use the Action's default token handling rather than a
