@@ -60,6 +60,24 @@ jobs:
 
       - uses: ./.github/actions/setup-toolchain
 
+      - name: Check Fallow agent installation
+        run: |
+          pnpm exec fallow agent status --format json --quiet > "$RUNNER_TEMP/fallow-agent-status.json"
+          cat "$RUNNER_TEMP/fallow-agent-status.json"
+          jq -e '
+            . as $status |
+            .kind == "agent-status" and
+            all(.surfaces[]; .state != "stale") and
+            all([
+              "AGENTS.md", "CLAUDE.md",
+              ".agents/skills/fallow", ".agents/skills/fallow-setup",
+              ".claude/skills/fallow", ".claude/skills/fallow-setup"
+            ][]; . as $path |
+              any($status.surfaces[];
+                .path == $path and .state == "installed" and
+                (.step == "guide" or .step == "skill")))
+          ' "$RUNNER_TEMP/fallow-agent-status.json"
+
       - name: Download coverage
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -89,6 +107,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - uses: ./.github/actions/setup-toolchain
+
+      - name: Expose npm global binaries
+        run: echo "$(npm prefix --global)/bin" >> "$GITHUB_PATH"
+
       - name: Download coverage
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -109,7 +132,6 @@ jobs:
           coverage-root: ${{ needs.test.outputs.coverage-root }}
           comment: true
           comment-layout: compact
-          branded-token: false
           review-comments: true
           review-guidance: true
           sarif: false

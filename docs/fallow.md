@@ -1,8 +1,8 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI, type-aware companion, and GitHub Action are pinned together and updated
-by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
+The CLI, type-aware companion, and GitHub Action are pinned to **3.45.0** together
+and updated by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
 same version as `fallow`: the CLI does not install this optional companion, but
 our complete type-aware gates require it. The Action provisions its own companion;
 that does not satisfy local scripts or the separate full-gate job.
@@ -15,7 +15,7 @@ duplication needs a documented, content-and-count-specific exception.
 
 | Surface | Command | Scope |
 |---|---|---|
-| pre-commit | `pnpm fallow:staged` | Strict audit and health checks of staged hunks |
+| pre-commit | `pnpm exec fallow audit --staged --quiet`, separate `pnpm fallow:staged:branch` and `pnpm fallow:health:staged` | Strict index-snapshot audit, branch-relative audit, and staged-hunk health check |
 | pre-push / `hk check` | `pnpm test:coverage && pnpm fallow:ci` | Strict changed-code audit plus full repository analysis using fresh coverage |
 | CI — `Test with coverage` | `pnpm test:coverage` | Unit suite; produces the shared coverage artifact |
 | CI — `Fallow gate` | `pnpm fallow:ci` | Same covered gate as local checks |
@@ -24,14 +24,67 @@ duplication needs a documented, content-and-count-specific exception.
 `hk` is the only hook manager. CI runs on pull requests; job names match the
 required checks on `master`.
 
-The staged script forces canonical `a/` and `b/` diff headers and disables
-external diff drivers so Git preferences cannot silently empty Fallow's line
-scope. Both the audit and standalone health check receive the staged diff.
+The native `audit --staged` command analyzes the index snapshot, not unstaged
+working-tree content, and includes staged new files. `--quiet` keeps actionable
+findings visible. The separate health script forces canonical `a/` and `b/` diff
+headers and disables external diff drivers so Git preferences cannot silently
+empty its staged-hunk scope.
+The separate branch-relative audit retains the previous `--diff-stdin` check:
+native `--staged` compares only with `HEAD` and can miss an unused dependency
+whose manifest declaration was added in an earlier branch commit. The old
+branch-relative check must remain mandatory alongside the native command.
 Audit exempts test-file complexity even with `gate: all`; standalone health
 with `--fail-on-issues` keeps those findings blocking, using the same thresholds
-and exclusions. During pre-commit, `hk` stashes unstaged work before both checks.
-Running the script directly analyzes the current working tree scoped to staged
-hunks.
+and exclusions. During pre-commit, `hk` stashes unstaged work before all staged checks.
+Running the health script directly analyzes the current working tree scoped to
+staged hunks; run it through `hk run pre-commit` for index-only isolation.
+
+With pnpm's isolated workspace dependencies, Fallow 3.45.0's native staged
+snapshot currently links root `node_modules` but not workspace `node_modules`.
+Without an install-layout adjustment, `apps/web/tsconfig.tests.json` cannot
+resolve `vitest/globals` in that snapshot (TS2688). `pnpm-workspace.yaml` uses
+pnpm's documented [`publicHoistPattern`](https://pnpm.io/settings/node-modules#publichoistpattern)
+with the exact package name `vitest`, exposing its existing workspace dependency
+at root so the snapshot can load the real globals and their dependency types.
+Run `pnpm install --frozen-lockfile` after updating this setting. This is not
+blanket hoisting: other packages retain pnpm's isolated layout, and no dependency
+or TypeScript configuration is changed. Complete type-aware analysis remains
+required for both projects, alongside the unchanged real typecheck, branch audit,
+and staged health gates. Reevaluate this compatibility setting when upgrading to
+a release that links workspace `node_modules` into staged snapshots; never
+disable type completeness or remove test globals to make the audit pass.
+
+## Coding agents
+
+Use the official [agent installer](https://fallow.tools/docs/integrations/agents/)
+and [package-backed skill pointers](https://fallow.tools/docs/integrations/agent-skills/):
+
+```bash
+pnpm install --frozen-lockfile
+pnpm exec fallow agent install --harness codex --harness claude --without hooks --without mcp --dry-run
+pnpm exec fallow agent install --harness codex --harness claude --without hooks --without mcp
+pnpm exec fallow agent status --format json --quiet
+```
+
+Commit the generated `AGENTS.md` task map, `CLAUDE.md` import, and the `fallow`
+and `fallow-setup` pointers under `.agents/skills/` and `.claude/skills/`.
+They read the version-matched instructions in `node_modules/fallow/skills/`
+instead of vendoring copies. Install dependencies before running the installer
+so it selects pointer form. The initial migration used `--force` to replace
+the old unmanaged skill; ordinary refreshes do not need it.
+
+Skip agent hooks because `hk` already owns the commit and push gates; do not
+install a second hook manager or duplicate agent commit gate. Skip MCP changes
+because the existing `.mcp.json` already runs the local `pnpm exec fallow-mcp`.
+No shared configuration or another project's setup is required.
+
+The required full-gate job checks `agent status`, independently of the coverage
+producer and PR feedback job. Stale pointers block merging without preventing
+tests or new-only review feedback from running. Status is informational,
+so CI validates its JSON: all six committed guide/skill surfaces must be
+`installed`, and no surface may be `stale`. Absent optional hooks/MCP surfaces
+and the existing unmanaged MCP registration are intentional. After every
+Fallow upgrade, rerun the installer and commit its refreshed pointers.
 
 ## Commands
 
@@ -39,7 +92,10 @@ hunks.
 pnpm test:coverage          # Generate coverage/coverage-final.json first
 pnpm fallow:ci              # Alias of fallow:full, used by hooks and CI
 pnpm fallow:full            # Changed-code audit, then combined full scan
-pnpm fallow:staged          # Staged-hunk audit and strict health; no coverage required
+pnpm fallow:staged          # Native index-snapshot audit; no coverage required
+pnpm fallow:staged:branch   # Retained branch-relative staged audit
+pnpm fallow:health:staged   # Separate strict health check of staged hunks
+hk run pre-commit          # All staged gates, with unstaged changes stashed by hk
 pnpm fallow:dead-code       # Strict standalone dead-code analysis
 pnpm fallow:dupes           # Standalone duplication analysis
 pnpm fallow:health          # Standalone coverage-aware health analysis
@@ -62,6 +118,7 @@ Use the CLI directly for inspection and cleanup instead of adding script aliases
 
 ```bash
 pnpm fallow config
+pnpm fallow config --resolved --for audit # Effective policy and its sources
 pnpm fallow doctor
 pnpm fallow type-aware status
 pnpm fallow list --entry-points
@@ -106,6 +163,9 @@ pnpm fallow fix --yes
   exceptions cover upstream primitives, declarative detail-route wiring around
   the shared document component, and intentional stylesheet patterns. Their
   fingerprint and occurrence-count keys report changed content or counts again.
+  The 13 count-locked `duplicates.ignoredClones` entries are the mechanism for
+  accepting an intentional clone. Preserve their fingerprints and occurrence
+  counts; never replace them with baseline files or a saved baseline.
 - Duplication uses semantic mode, near detection, and an 8-line/60-token floor.
 - Ten repository-specific architecture zones enforce dependency direction and
   require every source file to belong to a zone, with explicit exemptions.
@@ -123,6 +183,21 @@ the producing checkout's absolute path as a job output. The full gate passes
 that path through `FALLOW_COVERAGE_ROOT`; the review Action uses `coverage-root`.
 Fallow rebases Istanbul paths to the consuming checkout itself, so the artifact
 needs no rewriting, including when jobs use different checkout directories.
+
+Both analysis jobs install workspace dependencies through the existing toolchain
+setup action. Installing the CLI and its companion alone does not provide the
+project dependencies needed for framework plugins and type resolution; without
+them the review can report `node-modules-missing` and misleading findings.
+The review job also adds npm's resolved global `bin` directory to `GITHUB_PATH`
+before the official Action installs its CLI. With the pnpm-managed runtime,
+npm's global prefix is not necessarily on the runner's initial `PATH`.
+
+The official Action posts the sticky summary and inline review comments using
+`pull-requests: write` and `checks: write`. Keep `review-comments: true` and
+`review-guidance: true`; use the Action's default token handling rather than a
+`branded-token: false` override or a custom review-posting workaround. Verify
+the Action's render/post-review steps and the resulting feedback on each
+upgrade PR. A clean diff may have no inline findings to post.
 
 Local commands need only `--coverage`: the report already refers to the current
 checkout. Coverage stays explicit on covered gates so a missing report fails
@@ -164,7 +239,7 @@ identify the upgrade range, without adding release-specific claims to this guide
    blanket source exclusion, raise thresholds, or baseline findings just to
    make the update pass. Keep complete type-aware analysis mandatory.
 5. Generate fresh coverage and run `pnpm fallow:ci`, the standalone analyses,
-   and a representative staged diff through `fallow audit --diff-stdin`.
+   and a representative staged change through `fallow audit --staged --quiet`.
    Verify added lines reach the staged audit, an intentionally unused staged
    file fails, an over-threshold staged test/helper fails, and pre-commit checks
    the index with unstaged work stashed.

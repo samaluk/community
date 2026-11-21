@@ -1,6 +1,9 @@
 packages:
   - apps/*
 
+publicHoistPattern:
+  - vitest
+
 minimumReleaseAgeStrict: true
 minimumReleaseAge: 1440
 

@@ -68,7 +68,13 @@ local repo_checks = new Mapping<String, Step> {
   // audit exempts test-file complexity even with --gate all.
   // There is no pre-existing backlog to grandfather (see issue #264).
   ["fallow"] {
-    check = "pnpm fallow:staged"
+    check = "pnpm exec fallow audit --staged --quiet"
+  }
+  ["fallow-branch-audit"] {
+    check = "pnpm fallow:staged:branch"
+  }
+  ["fallow-health"] {
+    check = "pnpm fallow:health:staged"
   }
   ["test"] {
     check = "pnpm --filter @community/web test"
@@ -100,7 +106,9 @@ hooks {
     steps {
       ["check-env"] {
         dir = "apps/web"
-        check = #"""test -f .env.local || { echo "pre-push: missing apps/web/.env.local — run: cd apps/web && pnpm env:pull" >&2; exit 1; }"""#
+        check = #"""
+          test -f .env.local || { echo "pre-push: missing apps/web/.env.local — run: cd apps/web && pnpm env:pull" >&2; exit 1; }
+          """#
       }
       ["typecheck"] {
         check = "pnpm typecheck"
