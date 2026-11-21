@@ -41,12 +41,18 @@ staged hunks; run it through `hk run pre-commit` for index-only isolation.
 
 With pnpm's isolated workspace dependencies, Fallow 3.45.0's native staged
 snapshot currently links root `node_modules` but not workspace `node_modules`.
-The staged audit therefore fails complete type-aware analysis of
-`apps/web/tsconfig.tests.json` because it cannot resolve `vitest/globals` in the
-snapshot (TS2688). The same project is complete in the checkout, and the covered
-full gate passes. Keep this failure blocking until the upstream snapshot
-supports workspace dependency links; do not switch the hook to best-effort,
-disable type-aware analysis, or add a dependency-layout workaround to hide it.
+Without an install-layout adjustment, `apps/web/tsconfig.tests.json` cannot
+resolve `vitest/globals` in that snapshot (TS2688). `pnpm-workspace.yaml` uses
+pnpm's documented [`publicHoistPattern`](https://pnpm.io/settings/node-modules#publichoistpattern)
+with the exact package name `vitest`, exposing its existing workspace dependency
+at root so the snapshot can load the real globals and their dependency types.
+Run `pnpm install --frozen-lockfile` after updating this setting. This is not
+blanket hoisting: other packages retain pnpm's isolated layout, and no dependency
+or TypeScript configuration is changed. Complete type-aware analysis remains
+required for both projects, alongside the unchanged real typecheck, branch audit,
+and staged health gates. Reevaluate this compatibility setting when upgrading to
+a release that links workspace `node_modules` into staged snapshots; never
+disable type completeness or remove test globals to make the audit pass.
 
 ## Coding agents
 
