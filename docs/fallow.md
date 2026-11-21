@@ -188,6 +188,9 @@ Both analysis jobs install workspace dependencies through the existing toolchain
 setup action. Installing the CLI and its companion alone does not provide the
 project dependencies needed for framework plugins and type resolution; without
 them the review can report `node-modules-missing` and misleading findings.
+The review job also adds npm's resolved global `bin` directory to `GITHUB_PATH`
+before the official Action installs its CLI. With the pnpm-managed runtime,
+npm's global prefix is not necessarily on the runner's initial `PATH`.
 
 The official Action posts the sticky summary and inline review comments using
 `pull-requests: write` and `checks: write`. Keep `review-comments: true` and
