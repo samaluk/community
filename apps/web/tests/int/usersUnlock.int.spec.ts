@@ -121,6 +121,39 @@ describe('user unlock access integration', () => {
     expect(unlocked.lockUntil).toBeNull()
   })
 
+  it('keeps configured user reads and updates owner-only for authenticated Operator staff', async () => {
+    const options = {
+      collection: 'users' as const,
+      overrideAccess: false,
+      user: { ...staff, collection: 'users' as const },
+    }
+
+    const visible = await payload.find({
+      ...options,
+      where: { id: { in: [staff.id, target.id] } },
+    })
+    expect(visible.docs.map((user) => user.id)).toEqual([staff.id])
+    await expect(payload.findByID({ ...options, id: target.id })).rejects.toThrow()
+
+    const email = `${fixturePrefix}-updated-editor@example.test`
+    const updated = await payload.update({ ...options, id: staff.id, data: { email } })
+    expect(updated).toMatchObject({ id: staff.id, email })
+
+    await expect(
+      payload.update({
+        ...options,
+        id: target.id,
+        data: { email: `${fixturePrefix}-forbidden@example.test` },
+      }),
+    ).rejects.toThrow()
+    const unchangedTarget = await payload.findByID({
+      collection: 'users',
+      id: target.id,
+      overrideAccess: true,
+    })
+    expect(unchangedTarget.email).toBe(target.email)
+  })
+
   async function setTargetLockout() {
     await payload.db.updateOne({
       id: target.id,
