@@ -6,6 +6,7 @@ import {
   getPublicContentPublishing,
   getPublicContentRevalidationPaths,
   revalidateDeletedPublicContentDoc,
+  revalidateGlobalPublicContent,
   revalidatePublicContentDoc,
 } from '@/lib/publicContentPublishing'
 
@@ -186,6 +187,61 @@ describe('Public Content Publishing', () => {
       )
     } finally {
       logError.mockRestore()
+    }
+  })
+
+  it.each(['path', 'tag'] as const)(
+    'propagates %s revalidation failures inside the Next runtime',
+    async (target) => {
+      const failure = new Error(`${target} unavailable`)
+      const paths: string[] = []
+      const tags: string[] = []
+      vi.stubEnv('NEXT_RUNTIME', 'nodejs')
+      vi.resetModules()
+
+      try {
+        const publishing = await import('@/lib/publicContentPublishing')
+
+        await expect(
+          publishing.revalidatePublicContentDoc({
+            collection: 'places',
+            doc: { _status: 'published', operator: 1, slug: 'public-place' },
+            revalidate: (path) => {
+              paths.push(path)
+              if (target === 'path') throw failure
+            },
+            revalidateTag: (tag) => {
+              tags.push(tag)
+              throw failure
+            },
+          }),
+        ).rejects.toBe(failure)
+
+        expect(paths).toEqual(target === 'path' ? ['/places'] : ['/places', '/places/public-place'])
+        expect(tags).toEqual(target === 'path' ? [] : ['public-content:1:places'])
+      } finally {
+        vi.unstubAllEnvs()
+        vi.resetModules()
+      }
+    },
+  )
+
+  it('invalidates global public routes with only the changed Operator cache tags', async () => {
+    for (const operatorId of [101, 202]) {
+      const paths: string[] = []
+      const tags: Array<{ expire: number; tag: string }> = []
+
+      await revalidateGlobalPublicContent(
+        operatorId,
+        (path) => paths.push(path),
+        (tag, profile) => tags.push({ expire: profile.expire, tag }),
+      )
+
+      expect(paths).toEqual(['/', '/places', '/articles', '/products', '/privacy'])
+      expect(tags).toEqual([
+        { expire: 0, tag: `home-page:${operatorId}` },
+        { expire: 0, tag: `site-settings:${operatorId}` },
+      ])
     }
   })
 })
