@@ -1,7 +1,7 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI, type-aware companion, and GitHub Action are pinned to **3.45.0** together
+The CLI, type-aware companion, and GitHub Action are pinned to **3.46.0** together
 and updated by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
 same version as `fallow`: the CLI does not install this optional companion, but
 our complete type-aware gates require it. The Action provisions its own companion;
@@ -39,20 +39,12 @@ and exclusions. During pre-commit, `hk` stashes unstaged work before all staged 
 Running the health script directly analyzes the current working tree scoped to
 staged hunks; run it through `hk run pre-commit` for index-only isolation.
 
-With pnpm's isolated workspace dependencies, Fallow 3.45.0's native staged
-snapshot currently links root `node_modules` but not workspace `node_modules`.
-Without an install-layout adjustment, `apps/web/tsconfig.tests.json` cannot
-resolve `vitest/globals` in that snapshot (TS2688). `pnpm-workspace.yaml` uses
-pnpm's documented [`publicHoistPattern`](https://pnpm.io/settings/node-modules#publichoistpattern)
-with the exact package name `vitest`, exposing its existing workspace dependency
-at root so the snapshot can load the real globals and their dependency types.
-Run `pnpm install --frozen-lockfile` after updating this setting. This is not
-blanket hoisting: other packages retain pnpm's isolated layout, and no dependency
-or TypeScript configuration is changed. Complete type-aware analysis remains
-required for both projects, alongside the unchanged real typecheck, branch audit,
-and staged health gates. Reevaluate this compatibility setting when upgrading to
-a release that links workspace `node_modules` into staged snapshots; never
-disable type completeness or remove test globals to make the audit pass.
+Fallow links workspace `node_modules` into audit snapshots, so pnpm's isolated
+workspace dependencies resolve without publicly hoisting `vitest`. Complete
+type-aware analysis remains required for both projects, including the real
+`vitest/globals` types, alongside the unchanged real typecheck, branch audit,
+and staged health gates. Verify both staged and branch snapshots when upgrading;
+never disable type completeness or remove test globals to make the audit pass.
 
 ## Coding agents
 
