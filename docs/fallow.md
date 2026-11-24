@@ -1,7 +1,7 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI, type-aware companion, and GitHub Action are pinned to **3.46.0** together
+The CLI, type-aware companion, and GitHub Action are pinned to **3.47.0** together
 and updated by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
 same version as `fallow`: the CLI does not install this optional companion, but
 our complete type-aware gates require it. The Action provisions its own companion;
@@ -117,6 +117,7 @@ pnpm fallow list --entry-points
 pnpm fallow list --boundaries
 pnpm fallow recommend
 pnpm fallow recommend --root apps/web    # Inspect workspace-specific stack facts
+pnpm fallow dead-code --namespace-escapes # Find namespace imports that hide unused exports
 pnpm fallow architecture                 # Cycles, boundaries, and policy violations
 pnpm fallow security                     # Advisory candidates, requiring review
 pnpm fallow suppressions
