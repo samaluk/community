@@ -15,6 +15,7 @@ export default defineConfig({
   globalSetup: './tests/e2e/global-setup.ts',
   forbidOnly: isCI,
   globalTimeout: 180_000,
+  // oxlint-disable-next-line landmines/no-flake-masking -- Preserve the existing CI-only retry policy during the lint upgrade.
   retries: isCI ? 2 : 0,
   // Publishing tests invalidate shared cached listings and restore their fixtures.
   workers: 1,

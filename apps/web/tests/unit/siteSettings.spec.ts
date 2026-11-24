@@ -2,20 +2,20 @@ import { beforeEach, expect, it, vi } from 'vitest'
 
 import { DEFAULT_SITE_SETTINGS, getSiteSettings } from '@/lib/siteSettings'
 
-// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+// oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('@payload-config', () => ({ default: {} }))
-// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+// oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('payload', () => ({
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   createLocalReq: vi.fn(async ({ req }) => req),
   getPayload: vi.fn(),
 }))
-// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+// oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('next/headers', () => ({
   draftMode: vi.fn(),
   headers: vi.fn(),
 }))
-// oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+// oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
 vi.mock('next/cache', () => ({
   cacheLife: vi.fn(),
   cacheTag: vi.fn(),
@@ -24,9 +24,9 @@ vi.mock('next/cache', () => ({
 beforeEach(async () => {
   vi.clearAllMocks()
   const { draftMode, headers } = await import('next/headers')
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   vi.mocked(draftMode).mockResolvedValue({ isEnabled: false } as any)
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   vi.mocked(headers).mockResolvedValue(new Headers({ host: 'localhost' }))
 })
 
@@ -44,11 +44,11 @@ it('fetches published site settings when draft mode is disabled', async () => {
   const { headers } = await import('next/headers')
   const { getPayload } = await import('payload')
 
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   const mockFindOperator = vi.fn().mockResolvedValue({
     docs: [{ id: 1, name: 'Test Operator', domain: 'localhost', status: 'active' }],
   })
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   const mockFindSettings = vi.fn().mockResolvedValue({
     docs: [
       {
@@ -61,7 +61,7 @@ it('fetches published site settings when draft mode is disabled', async () => {
       },
     ],
   })
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   vi.mocked(getPayload)
     .mockResolvedValueOnce({ find: mockFindOperator } as any)
     .mockResolvedValueOnce({ find: mockFindSettings } as any)
@@ -85,10 +85,10 @@ it('fetches published site settings when draft mode is disabled', async () => {
 it('returns fallback defaults if getPayload throws an unavailable error', async () => {
   const { getPayload } = await import('payload')
 
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   vi.mocked(getPayload)
     .mockResolvedValueOnce({
-      // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+      // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
       find: vi.fn().mockResolvedValue({
         docs: [{ id: 1, name: 'Test Operator', domain: 'localhost', status: 'active' }],
       }),

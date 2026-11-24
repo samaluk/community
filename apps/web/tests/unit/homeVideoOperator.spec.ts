@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest'
 import { ensureHomeVideoOperator } from '@/access/homeVideoOperator'
 
 it('keeps home video ownership on create and partial updates, rejecting another Operator’s media', async () => {
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   const findByID = vi.fn().mockResolvedValue({ operator: { id: 101 } })
   const req = { payload: { findByID } }
   const data = { operator: 101, heroVideo: 7 }
@@ -19,11 +19,11 @@ it('keeps home video ownership on create and partial updates, rejecting another 
     }),
   )
 
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   findByID.mockResolvedValue({ operator: 202 })
   await expect(ensureHomeVideoOperator(args)).rejects.toThrow('same operator')
 
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   findByID.mockResolvedValue({ operator: 101 })
   const update = { heroVideo: { id: 8 } }
   await expect(
@@ -36,7 +36,7 @@ it('keeps home video ownership on create and partial updates, rejecting another 
   ).resolves.toBe(update)
   expect(findByID).toHaveBeenLastCalledWith(expect.objectContaining({ id: 8 }))
 
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   findByID.mockResolvedValue({ operator: 202 })
   await expect(
     ensureHomeVideoOperator({

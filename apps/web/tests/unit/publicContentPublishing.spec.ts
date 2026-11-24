@@ -162,7 +162,7 @@ describe('Public Content Publishing', () => {
   it('logs path and cache-tag revalidation failures with their target', async () => {
     const pathFailure = new Error('path unavailable')
     const tagFailure = new Error('tag unavailable')
-    // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+    // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
     const logError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
 
     try {
