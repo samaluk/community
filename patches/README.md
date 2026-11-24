@@ -1,8 +1,8 @@
 # Dependency patches
 
-## Payload multi-tenant 3.93.0
+## Payload multi-tenant 3.94.1
 
-The global-view redirect helper enforces read/create access in 3.93.0 but omits
+The global-view redirect helper enforces read/create access but omits
 request headers from its Local API calls. Our Operator access callbacks need the
 Host header and selected-tenant cookie. Forward those headers to the lookup and
 autosave creation without changing `overrideAccess: false` or tenant selection.
