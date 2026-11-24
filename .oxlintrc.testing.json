@@ -6,16 +6,16 @@
   "plugins": [],
   "jsPlugins": [
     {
-      "name": "landmines-testing",
-      "specifier": "@interfere/landmines/testing"
+      "name": "landmines",
+      "specifier": "@interfere/landmines"
     }
   ],
   "rules": {
-    "landmines-testing/no-test-doubles": "error",
-    "landmines-testing/strict-msw": "error",
-    "landmines-testing/no-fixed-sleep": "error",
-    "landmines-testing/no-unsignaled-poll": "error",
-    "landmines-testing/no-flake-masking": [
+    "landmines/no-test-doubles": "error",
+    "landmines/strict-msw": "error",
+    "landmines/no-fixed-sleep": "error",
+    "landmines/no-unsignaled-poll": "error",
+    "landmines/no-flake-masking": [
       "error",
       {
         "allow": {

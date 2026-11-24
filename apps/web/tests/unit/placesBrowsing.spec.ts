@@ -21,7 +21,7 @@ const place = (overrides: Partial<PlaceMapItem> = {}): PlaceMapItem => ({
 })
 
 it('keeps public Places queries scoped to one Operator and published documents', async () => {
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   const find = vi.fn().mockResolvedValue({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
   const places = createPayloadPlacesAdapter({
     cmsQuery: { draft: false, overrideAccess: true },
@@ -64,7 +64,7 @@ it('forwards the authenticated request for Operator-scoped draft Places reads', 
       tenants: [{ operator: 101, role: 'editor' }],
     },
   }
-  // oxlint-disable-next-line landmines-testing/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
+  // oxlint-disable-next-line landmines/no-test-doubles -- TODO(landmines): replace legacy test double with real implementation or MSW.
   const find = vi.fn().mockResolvedValue({ docs: [], page: 1, totalDocs: 0, totalPages: 0 })
   const places = createPayloadPlacesAdapter({
     cmsQuery: { draft: true, overrideAccess: false, req },
