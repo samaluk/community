@@ -5,6 +5,33 @@ type ResponseChunks = {
   streamed: Buffer[]
 }
 
+export async function waitForPrefetchedShellScripts(page: Page, pathname: string, marker: string) {
+  const shell = await page.waitForResponse(
+    async (response) =>
+      new URL(response.url()).pathname === pathname &&
+      response.ok() &&
+      response.headers()['content-type']?.startsWith('text/x-component') === true &&
+      (await response.text()).includes(marker),
+  )
+  const scripts = (await shell.text()).match(/\/_next\/static\/chunks\/[^"\s]+\.js(?=")/g) ?? []
+  expect(scripts.length).toBeGreaterThan(0)
+
+  await page.waitForFunction(
+    (paths) =>
+      paths.every((path) =>
+        performance
+          .getEntriesByName(new URL(path, location.origin).href, 'resource')
+          .some(
+            (entry) =>
+              entry instanceof PerformanceResourceTiming &&
+              entry.responseStatus >= 200 &&
+              entry.responseStatus < 400,
+          ),
+      ),
+    scripts,
+  )
+}
+
 /** Observes streamed RSC responses and waits for content in a target shell. */
 export async function observePrefetchedShell(page: Page, pathname: string) {
   const cdp = await page.context().newCDPSession(page)

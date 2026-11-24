@@ -1,26 +1,21 @@
 import { expect, test } from '@playwright/test'
 
-import { observePrefetchedShell } from './helpers/prefetchedShell'
+import { waitForPrefetchedShellScripts } from './helpers/prefetchedShell'
 
 test('a prefetched article remains usable offline and after reconnecting', async ({
   context,
   page,
 }) => {
   const articlePath = '/articles/articulo-fixture-1'
-  const shell = await observePrefetchedShell(page, articlePath)
+  const card = page.locator('[data-slot="card"]').filter({ hasText: 'Articulo Fixture Uno' })
+  const link = card.getByRole('link', { name: 'Read article' })
+
+  await Promise.all([
+    waitForPrefetchedShellScripts(page, articlePath, 'article-detail-back-link'),
+    page.goto('/articles').then(() => link.hover()),
+  ])
 
   try {
-    await page.goto('/articles')
-    const card = page.locator('[data-slot="card"]').filter({ hasText: 'Articulo Fixture Uno' })
-    const link = card.getByRole('link', { name: 'Read article' })
-    await expect(link).toBeVisible()
-    await link.scrollIntoViewIfNeeded()
-    await link.hover()
-    // A route-tree prefetch has no shell data. Wait for the actual article segment,
-    // then let Next process the streamed response and settle its module requests.
-    await shell.waitUntilReady('article-detail-back-link')
-    await page.waitForLoadState('networkidle')
-
     await context.setOffline(true)
     await expect(page.getByRole('status').filter({ hasText: "You're offline" })).toBeVisible()
 
@@ -31,7 +26,6 @@ test('a prefetched article remains usable offline and after reconnecting', async
     await expect(page.getByText("You're offline", { exact: false })).toHaveCount(0)
   } finally {
     await context.setOffline(false)
-    await shell.close()
   }
 })
 
