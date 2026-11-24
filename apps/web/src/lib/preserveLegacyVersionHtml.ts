@@ -31,7 +31,7 @@ function enforceRequiredOperator(table: Parameters<typeof getTableColumns>[0], c
   Object.defineProperty(operatorColumn, 'notNull', { value: true })
 
   for (const foreignKey of getTableConfig(table).foreignKeys) {
-    if (foreignKey.reference().columns.includes(operatorColumn)) {
+    if (foreignKey.reference().columns.some((column) => column === operatorColumn)) {
       Object.defineProperty(foreignKey, 'onDelete', { value: 'restrict' })
     }
   }
