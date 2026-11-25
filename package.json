@@ -51,7 +51,7 @@
     "lint:testing": "oxlint apps/web --config .oxlintrc.testing.json"
   },
   "devDependencies": {
-    "@interfere/landmines": "0.3.0",
+    "@interfere/landmines": "0.3.1",
     "@shadcn/lint": "0.2.5",
     "fallow": "3.48.0",
     "fallow-type-aware": "3.48.0",
