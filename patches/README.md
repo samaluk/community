@@ -1,6 +1,6 @@
 # Dependency patches
 
-## Payload multi-tenant 3.94.1
+## Payload multi-tenant 3.94.2
 
 The global-view redirect helper enforces read/create access but omits
 request headers from its Local API calls. Our Operator access callbacks need the
