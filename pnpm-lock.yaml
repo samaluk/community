@@ -189,8 +189,8 @@ importers:
   .:
     devDependencies:
       '@interfere/landmines':
-        specifier: 0.3.1
-        version: 0.3.1(oxlint@1.95.0(oxlint-tsgolint@7.0.2008))
+        specifier: 0.3.2
+        version: 0.3.2(oxlint@1.95.0(oxlint-tsgolint@7.0.2008))
       '@shadcn/lint':
         specifier: 0.2.5
         version: 0.2.5(@typescript-eslint/parser@8.70.0(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@10.9.0(jiti@2.7.0)(supports-color@7.2.0))
@@ -1458,8 +1458,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@interfere/landmines@0.3.1':
-    resolution: {integrity: sha512-w55JbpiBaswGV+kZmp7C1pxfcB/s+UIWuKP2NZpKqgDSpro7SguhBC9rXHa9+2WaTEwny6PO0VUWyQ1CV/Mjbg==}
+  '@interfere/landmines@0.3.2':
+    resolution: {integrity: sha512-/fdJclUvPUTTFeq9ALcxTzAi6TGZM+oDnV0t1XUuW/49PQzAh1AHrZyHVGPcNAFdJfL4kWu9n2EHs2fLLmb0Vw==}
     engines: {node: '>=22.18.0'}
     peerDependencies:
       oxlint: '>=1.81.0'
@@ -6882,7 +6882,7 @@ snapshots:
       '@types/node': 26.6.10
     optional: true
 
-  '@interfere/landmines@0.3.1(oxlint@1.95.0(oxlint-tsgolint@7.0.2008))':
+  '@interfere/landmines@0.3.2(oxlint@1.95.0(oxlint-tsgolint@7.0.2008))':
     dependencies:
       '@babel/parser': 8.0.4
       '@babel/types': 8.0.4
