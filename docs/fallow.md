@@ -1,7 +1,7 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI, type-aware companion, and GitHub Action are pinned to **3.48.0** together
+The CLI, type-aware companion, and GitHub Action are pinned to **3.49.0** together
 and updated by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
 same version as `fallow`: the CLI does not install this optional companion, but
 our complete type-aware gates require it. The Action provisions its own companion;
