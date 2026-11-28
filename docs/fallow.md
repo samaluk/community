@@ -1,7 +1,7 @@
 # Fallow
 
 Fallow checks dead code, duplication, code health, and architecture boundaries.
-The CLI, type-aware companion, and GitHub Action are pinned to **3.49.0** together
+The CLI, type-aware companion, and GitHub Action are pinned together
 and updated by Renovate. Declare `fallow-type-aware` as a direct devDependency at exactly the
 same version as `fallow`: the CLI does not install this optional companion, but
 our complete type-aware gates require it. The Action provisions its own companion;
@@ -181,9 +181,8 @@ Both analysis jobs install workspace dependencies through the existing toolchain
 setup action. Installing the CLI and its companion alone does not provide the
 project dependencies needed for framework plugins and type resolution; without
 them the review can report `node-modules-missing` and misleading findings.
-The review job also adds npm's resolved global `bin` directory to `GITHUB_PATH`
-before the official Action installs its CLI. With the pnpm-managed runtime,
-npm's global prefix is not necessarily on the runner's initial `PATH`.
+The official Action adds npm's resolved global `bin` directory to `GITHUB_PATH`
+as needed so analysis and feedback use the CLI it installed and verified.
 
 The official Action posts the sticky summary and inline review comments using
 `pull-requests: write` and `checks: write`. Keep `review-comments: true` and
