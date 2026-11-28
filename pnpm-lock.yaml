@@ -198,8 +198,8 @@ importers:
         specifier: 3.49.0
         version: 3.49.0
       fallow-type-aware:
-        specifier: 3.49.0
-        version: 3.49.0
+        specifier: 3.50.0
+        version: 3.50.0
       node:
         specifier: runtime:26.13.1
         version: runtime:26.13.1
@@ -3911,8 +3911,8 @@ packages:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
 
-  fallow-type-aware@3.49.0:
-    resolution: {integrity: sha512-iH8FHmorXXYCZyOGjLmmziSrinPjVIjyGRa7nOLbcPDeja1G1BHbEm2GSuiHEx0civxEpT5gpjrOg623I/mI2w==}
+  fallow-type-aware@3.50.0:
+    resolution: {integrity: sha512-yhwi0nqAa/GBR2il5RgcTPyO8tvkOm2qxuDicUvRKm4vyf6Juf0nteSpqaObCrgS3Whp2FluX+x+pv/jpU2cjg==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
@@ -9115,7 +9115,7 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  fallow-type-aware@3.49.0:
+  fallow-type-aware@3.50.0:
     dependencies:
       typescript: 7.0.2
 
