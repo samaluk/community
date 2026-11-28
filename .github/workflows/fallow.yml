@@ -109,9 +109,6 @@ jobs:
 
       - uses: ./.github/actions/setup-toolchain
 
-      - name: Expose npm global binaries
-        run: echo "$(npm prefix --global)/bin" >> "$GITHUB_PATH"
-
       - name: Download coverage
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -121,7 +118,7 @@ jobs:
       # The Action reads the pinned CLI version and provisions its semantic
       # companion. The full gate requires complete types; review is best-effort.
       - name: Fallow changed-code audit
-        uses: fallow-rs/fallow@4c2eede9e2335822a275bf1bbd2a9023286d25a4 # v3.49.0
+        uses: fallow-rs/fallow@57325d871dfae9cf383db5b27a0dec166b885135 # v3.50.0
         with:
           command: audit
           gate: new-only
